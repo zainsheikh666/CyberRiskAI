@@ -381,6 +381,9 @@ def download_pdf(assessment_id):
         as_attachment=True,
         download_name=f'CyberRiskAI_{current_user.company_name}_{datetime.datetime.now().strftime("%Y%m%d")}.pdf'
     )
+@app.route('/waitlist', methods=['POST'])
+def waitlist():
+    return redirect(url_for('register'))
 
 if __name__ == '__main__':
     app.run(debug=True)
