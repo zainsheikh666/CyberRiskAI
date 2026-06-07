@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment — CyberRisk AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">🛡️ Cyber<span>Risk AI</span></a>
+    </nav>
+
+    <div class="page-wrap">
+        <div class="steps-bar">
+            <div class="step-dot active">1</div>
+            <div class="step-connector"></div>
+            <div class="step-dot pending">2</div>
+            <div class="step-connector"></div>
+            <div class="step-dot pending">3</div>
+        </div>
+
+        <div class="page-heading">Tell us about your company</div>
+        <div class="page-subheading">Takes less than 5 minutes. No technical knowledge needed.</div>
+
+        <form action="/results" method="POST">
+
+            <div class="card-section">
+                <div class="card-section-title">Company Information</div>
+
+                <div class="field-group">
+                    <label class="field-label">Company name</label>
+                    <input type="text" class="field-input" name="company_name" placeholder="Acme Solutions Ltd" required>
+                </div>
+
+                <div class="field-row">
+                    <div>
+                        <label class="field-label">Industry</label>
+                        <select class="field-input" name="industry">
+                            <option value="Retail">Retail</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Education">Education</option>
+                            <option value="Hospitality">Hospitality</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Number of employees</label>
+                        <select class="field-input" name="employees">
+                            <option value="1-10">1 — 10</option>
+                            <option value="11-50">11 — 50</option>
+                            <option value="51-200">51 — 200</option>
+                            <option value="201-500">201 — 500</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Company website / domain</label>
+                    <input type="text" class="field-input" name="domain" placeholder="acmesolutions.co.uk">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Company email (for dark web breach check)</label>
+                    <input type="email" class="field-input" name="email" placeholder="info@acmesolutions.co.uk">
+                </div>
+
+            </div>
+
+            <div class="card-section">
+                <div class="card-section-title">Security Questions</div>
+
+                <div class="q-row">
+                    <span class="q-text">Do you use antivirus software on all devices?</span>
+                    <div class="toggle-wrap">
+                        <button type="button" class="tog" onclick="pick(this,'antivirus','yes')">Yes</button>
+                        <button type="button" class="tog" onclick="pick(this,'antivirus','no')">No</button>
+                    </div>
+                    <input type="hidden" name="antivirus" id="antivirus" value="no">
+                </div>
+
+                <div class="q-row">
+                    <span class="q-text">Is Multi-Factor Authentication (MFA) enabled?</span>
+                    <div class="toggle-wrap">
+                        <button type="button" class="tog" onclick="pick(this,'mfa','yes')">Yes</button>
+                        <button type="button" class="tog" onclick="pick(this,'mfa','no')">No</button>
+                    </div>
+                    <input type="hidden" name="mfa" id="mfa" value="no">
+                </div>
+
+                <div class="q-row">
+                    <span class="q-text">Do you take regular data backups?</span>
+                    <div class="toggle-wrap">
+                        <button type="button" class="tog" onclick="pick(this,'backups','yes')">Yes</button>
+                        <button type="button" class="tog" onclick="pick(this,'backups','no')">No</button>
+                    </div>
+                    <input type="hidden" name="backups" id="backups" value="no">
+                </div>
+
+                <div class="q-row">
+                    <span class="q-text">Do staff receive cybersecurity training?</span>
+                    <div class="toggle-wrap">
+                        <button type="button" class="tog" onclick="pick(this,'training','yes')">Yes</button>
+                        <button type="button" class="tog" onclick="pick(this,'training','no')">No</button>
+                    </div>
+                    <input type="hidden" name="training" id="training" value="no">
+                </div>
+
+                <div class="q-row">
+                    <span class="q-text">Do you use strong password policies?</span>
+                    <div class="toggle-wrap">
+                        <button type="button" class="tog" onclick="pick(this,'passwords','yes')">Yes</button>
+                        <button type="button" class="tog" onclick="pick(this,'passwords','no')">No</button>
+                    </div>
+                    <input type="hidden" name="passwords" id="passwords" value="no">
+                </div>
+
+                <div class="q-row">
+                    <span class="q-text">Is sensitive data encrypted?</span>
+                    <div class="toggle-wrap">
+                        <button type="button" class="tog" onclick="pick(this,'encryption','yes')">Yes</button>
+                        <button type="button" class="tog" onclick="pick(this,'encryption','no')">No</button>
+                    </div>
+                    <input type="hidden" name="encryption" id="encryption" value="no">
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn-submit">Calculate My Risk Score →</button>
+
+        </form>
+    </div>
+
+    <script>
+        function pick(btn, field, value) {
+            const btns = btn.parentElement.querySelectorAll('.tog');
+            btns.forEach(b => b.classList.remove('yes-on','no-on'));
+            btn.classList.add(value === 'yes' ? 'yes-on' : 'no-on');
+            document.getElementById(field).value = value;
+        }
+    </script>
+</body>
+</html>
