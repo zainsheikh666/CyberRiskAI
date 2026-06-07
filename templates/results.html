@@ -140,6 +140,28 @@
             </div>
 
         </div>
+        <!-- AI Attack Simulation -->
+<div class="result-card">
+    <div class="result-card-title">🎯 AI ATTACK SIMULATION</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
+        Based on your vulnerabilities, here is exactly how a hacker would attack <strong style="color:rgba(255,255,255,0.6)">{{ company_name }}</strong> today —
+    </div>
+
+    {% for step in attack_simulation %}
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(226,75,74,0.06);border:0.5px solid rgba(226,75,74,0.15);border-radius:10px;margin-bottom:8px">
+        <div style="width:28px;height:28px;border-radius:50%;background:rgba(226,75,74,0.2);border:1px solid rgba(226,75,74,0.4);color:#F09595;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            {{ loop.index }}
+        </div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6">
+            {{ step }}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div style="margin-top:12px;padding:12px 16px;background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.2);border-radius:8px;font-size:12px;color:rgba(239,159,39,0.8)">
+        ⚠️ This simulation is based on real attack techniques used against SMEs. Fix the issues above to close these attack paths.
+    </div>
+</div>
 
         <!-- AI Recommendations -->
         <div class="result-card">
@@ -200,6 +222,92 @@
                 <span class="{{ 'ans-yes' if answers.encryption == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.encryption == 'yes' else 'No ✗' }}</span>
             </div>
         </div>
+        <!-- Digital Door Lock Score -->
+<div class="result-card">
+    <div class="result-card-title">🚪 DIGITAL DOOR LOCK SCORE</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
+        Every night business owners lock their physical doors — but are they locking their digital ones?
+    </div>
+
+    <div class="door-row">
+        <div class="door-left">
+            <div class="door-icon">🚪</div>
+            <div>
+                <div class="door-name">Front door</div>
+                <div class="door-sub">Main account access — MFA</div>
+            </div>
+        </div>
+        <div class="door-status {{ 'locked' if answers.mfa == 'yes' else 'unlocked' }}">
+            {{ '🔒 Locked' if answers.mfa == 'yes' else '🔓 Unlocked' }}
+        </div>
+    </div>
+
+    <div class="door-row">
+        <div class="door-left">
+            <div class="door-icon">🚨</div>
+            <div>
+                <div class="door-name">Alarm system</div>
+                <div class="door-sub">Threat monitoring — Antivirus</div>
+            </div>
+        </div>
+        <div class="door-status {{ 'locked' if answers.antivirus == 'yes' else 'unlocked' }}">
+            {{ '🔒 Active' if answers.antivirus == 'yes' else '🔓 No alarm' }}
+        </div>
+    </div>
+
+    <div class="door-row">
+        <div class="door-left">
+            <div class="door-icon">📁</div>
+            <div>
+                <div class="door-name">Safe & vault</div>
+                <div class="door-sub">Data protection — Backups</div>
+            </div>
+        </div>
+        <div class="door-status {{ 'locked' if answers.backups == 'yes' else 'unlocked' }}">
+            {{ '🔒 Secured' if answers.backups == 'yes' else '🔓 No safe' }}
+        </div>
+    </div>
+
+    <div class="door-row">
+        <div class="door-left">
+            <div class="door-icon">📧</div>
+            <div>
+                <div class="door-name">Letterbox lock</div>
+                <div class="door-sub">Email security — SPF/DMARC</div>
+            </div>
+        </div>
+        <div class="door-status {{ 'locked' if dns_result.spf == 'found' else 'unlocked' }}">
+            {{ '🔒 Protected' if dns_result.spf == 'found' else '🔓 Open letterbox' }}
+        </div>
+    </div>
+
+    <div class="door-row">
+        <div class="door-left">
+            <div class="door-icon">🪟</div>
+            <div>
+                <div class="door-name">Windows & doors</div>
+                <div class="door-sub">Encryption — Data security</div>
+            </div>
+        </div>
+        <div class="door-status {{ 'locked' if answers.encryption == 'yes' else 'unlocked' }}">
+            {{ '🔒 Closed' if answers.encryption == 'yes' else '🔓 Windows open' }}
+        </div>
+    </div>
+
+    <div class="door-row" style="margin-bottom:0">
+        <div class="door-left">
+            <div class="door-icon">👥</div>
+            <div>
+                <div class="door-name">Security training</div>
+                <div class="door-sub">Staff awareness — Human risk</div>
+            </div>
+        </div>
+        <div class="door-status {{ 'locked' if answers.training == 'yes' else 'unlocked' }}">
+            {{ '🔒 Trained' if answers.training == 'yes' else '🔓 Untrained staff' }}
+        </div>
+    </div>
+
+</div>
 
         <a href="/assessment" class="btn-retake">← Take Assessment Again</a>
 

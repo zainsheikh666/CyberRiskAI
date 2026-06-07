@@ -683,3 +683,68 @@ body {
 
 .pts-high { color: #F09595; }
 .pts-medium { color: #EF9F27; }
+/* DIGITAL DOOR LOCK */
+.door-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.02);
+    border: 0.5px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 7px;
+}
+
+.door-row:last-child {
+    margin-bottom: 0;
+}
+
+.door-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.door-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.door-name {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.door-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+}
+
+.door-status {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    flex-shrink: 0;
+}
+
+.door-status.locked {
+    background: rgba(99,153,34,0.12);
+    border: 0.5px solid rgba(99,153,34,0.25);
+    color: #97C459;
+}
+
+.door-status.unlocked {
+    background: rgba(226,75,74,0.1);
+    border: 0.5px solid rgba(226,75,74,0.2);
+    color: #F09595;
+}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — CyberRisk AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">🛡️ Cyber<span>Risk AI</span></a>
+        <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:13px;color:rgba(255,255,255,0.4)">{{ current_user.company_name }}</span>
+            <a href="/assessment" class="nav-pill">New Scan</a>
+            <a href="/logout" style="font-size:12px;color:rgba(255,255,255,0.3);text-decoration:none">Logout</a>
+        </div>
+    </nav>
+
+    <div class="results-wrap">
+
+        <div style="margin-bottom:24px">
+            <div style="font-size:22px;font-weight:600;color:#E6F1FB;margin-bottom:4px">
+                Welcome back, {{ current_user.company_name }} 👋
+            </div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.35)">
+                {{ current_user.industry }} · {{ current_user.employees }} employees · {{ current_user.domain }}
+            </div>
+        </div>
+
+        {% if assessments %}
+
+        <!-- Stats Row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+            <div class="result-card" style="padding:16px;text-align:center">
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">LATEST SCORE</div>
+                <div style="font-size:32px;font-weight:700;color:
+                    {% if assessments[0].risk_level == 'High' %}#F09595
+                    {% elif assessments[0].risk_level == 'Medium' %}#EF9F27
+                    {% else %}#97C459{% endif %}">
+                    {{ assessments[0].score }}
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.25)">out of 100</div>
+            </div>
+            <div class="result-card" style="padding:16px;text-align:center">
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">RISK LEVEL</div>
+                <div style="font-size:18px;font-weight:600;color:
+                    {% if assessments[0].risk_level == 'High' %}#F09595
+                    {% elif assessments[0].risk_level == 'Medium' %}#EF9F27
+                    {% else %}#97C459{% endif %}">
+                    {{ assessments[0].risk_level }}
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.25)">current status</div>
+            </div>
+            <div class="result-card" style="padding:16px;text-align:center">
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">TOTAL SCANS</div>
+                <div style="font-size:32px;font-weight:700;color:#85B7EB">{{ assessments|length }}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.25)">assessments done</div>
+            </div>
+            <div class="result-card" style="padding:16px;text-align:center">
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">TREND</div>
+                {% if assessments|length > 1 %}
+                    {% if assessments[0].score < assessments[1].score %}
+                        <div style="font-size:24px;font-weight:700;color:#97C459">↓ Improving</div>
+                    {% elif assessments[0].score > assessments[1].score %}
+                        <div style="font-size:24px;font-weight:700;color:#F09595">↑ Worsening</div>
+                    {% else %}
+                        <div style="font-size:24px;font-weight:700;color:#EF9F27">→ Same</div>
+                    {% endif %}
+                {% else %}
+                    <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.3)">First scan</div>
+                {% endif %}
+                <div style="font-size:11px;color:rgba(255,255,255,0.25)">vs last scan</div>
+            </div>
+        </div>
+
+        <!-- Risk History Chart -->
+        <div class="result-card" style="margin-bottom:16px">
+            <div class="result-card-title">RISK SCORE HISTORY</div>
+            <canvas id="historyChart" height="80"></canvas>
+        </div>
+
+        <!-- Assessment History -->
+        <div class="result-card">
+            <div class="result-card-title">ASSESSMENT HISTORY</div>
+            {% for a in assessments %}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:0.5px solid rgba(255,255,255,0.04)">
+                <div>
+                    <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:3px">
+                        {{ a.created_at.strftime('%d %b %Y — %H:%M') }}
+                    </div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.3)">
+                        SSL: {{ a.ssl_status }} · SPF: {{ a.spf_status }} · DMARC: {{ a.dmarc_status }}
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:20px;font-weight:700;color:
+                        {% if a.risk_level == 'High' %}#F09595
+                        {% elif a.risk_level == 'Medium' %}#EF9F27
+                        {% else %}#97C459{% endif %}">
+                        {{ a.score }}
+                    </div>
+                    <div style="font-size:11px;color:
+                        {% if a.risk_level == 'High' %}#F09595
+                        {% elif a.risk_level == 'Medium' %}#EF9F27
+                        {% else %}#97C459{% endif %}">
+                        {{ a.risk_level }} Risk
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="result-card" style="text-align:center;padding:48px">
+            <div style="font-size:48px;margin-bottom:16px">🛡️</div>
+            <div style="font-size:18px;font-weight:600;color:#E6F1FB;margin-bottom:8px">No scans yet</div>
+            <a href="/assessment" class="btn-retake" style="display:inline-block;width:auto;padding:12px 32px">Start Assessment →</a>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+    {% if assessments|length > 1 %}
+    const labels = [{% for a in assessments|reverse %}"{{ a.created_at.strftime('%d %b') }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    const scores = [{% for a in assessments|reverse %}{{ a.score }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    new Chart(document.getElementById('historyChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Risk Score',
+                data: scores,
+                borderColor: '#378ADD',
+                backgroundColor: 'rgba(55,138,221,0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#378ADD',
+                pointRadius: 4,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    min: 0, max: 100,
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
+                },
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
+                }
+            }
+        }
+    });
+    {% endif %}
+    </script>
+</body>
+</html>
