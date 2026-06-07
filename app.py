@@ -246,8 +246,37 @@ def dashboard():
     assessments = Assessment.query.filter_by(
         company_id=current_user.id
     ).order_by(Assessment.created_at.desc()).all()
-    return render_template('dashboard.html', assessments=assessments)
+    latest = assessments[0] if assessments else None
 
+    attack_steps = []
+    recommendations = []
+
+    if latest:
+        answers = {
+            'antivirus': latest.antivirus,
+            'mfa': latest.mfa,
+            'backups': latest.backups,
+            'training': latest.training,
+            'passwords': latest.passwords,
+            'encryption': latest.encryption,
+        }
+        ssl_result = {'status': latest.ssl_status}
+        dns_result = {'spf': latest.spf_status, 'dmarc': latest.dmarc_status}
+        breach_result = {'breached': latest.breach_found, 'count': 0, 'breaches': []}
+
+        attack_steps = generate_attack_simulation(
+            current_user.company_name,
+            current_user.domain or '',
+            answers, ssl_result, dns_result
+        )
+        recommendations = generate_recommendations(answers, ssl_result, dns_result, breach_result)
+
+    return render_template('dashboard.html',
+        assessments=assessments,
+        latest=latest,
+        attack_steps=attack_steps,
+        recommendations=recommendations
+    )
 @app.route('/assessment')
 @login_required
 def assessment():

@@ -5,161 +5,656 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — CyberRisk AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #060b18; font-family: 'Segoe UI', sans-serif; display: flex; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { width: 220px; background: #080e1d; border-right: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar-logo { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+        .logo-icon { width: 32px; height: 32px; background: #185FA5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .logo-text { font-size: 14px; font-weight: 600; color: #E6F1FB; }
+        .logo-sub { font-size: 9px; color: #378ADD; letter-spacing: 0.05em; }
+        .sidebar-nav { padding: 12px 8px; flex: 1; overflow-y: auto; }
+        .nav-section { font-size: 9px; color: rgba(255,255,255,0.25); padding: 12px 8px 5px; letter-spacing: 0.08em; }
+        .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 6px; color: rgba(255,255,255,0.35); font-size: 12px; cursor: pointer; margin-bottom: 2px; text-decoration: none; transition: all 0.15s; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); text-decoration: none; }
+        .nav-item.active { background: rgba(55,138,221,0.12); color: #85B7EB; border-left: 2px solid #378ADD; border-radius: 0 6px 6px 0; }
+        .nav-item i { font-size: 15px; flex-shrink: 0; }
+        .nav-badge { margin-left: auto; font-size: 9px; background: rgba(226,75,74,0.2); color: #F09595; border: 0.5px solid rgba(226,75,74,0.3); padding: 1px 6px; border-radius: 3px; }
+        .sidebar-bottom { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .user-row { display: flex; align-items: center; gap: 8px; }
+        .user-av { width: 28px; height: 28px; border-radius: 50%; background: rgba(55,138,221,0.2); border: 1px solid rgba(55,138,221,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #85B7EB; flex-shrink: 0; }
+        .user-name { font-size: 11px; color: rgba(255,255,255,0.5); }
+        .user-role { font-size: 10px; color: rgba(255,255,255,0.25); }
+
+        /* MAIN CONTENT */
+        .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+        .topbar { padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; background: #080e1d; position: sticky; top: 0; z-index: 50; }
+        .topbar-title { font-size: 14px; font-weight: 600; color: #E6F1FB; }
+        .topbar-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .tb-btn { display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 6px; font-size: 11px; border: 0.5px solid rgba(55,138,221,0.3); color: #85B7EB; background: rgba(55,138,221,0.08); cursor: pointer; text-decoration: none; transition: all 0.15s; }
+        .tb-btn:hover { background: rgba(55,138,221,0.15); color: #85B7EB; text-decoration: none; }
+        .tb-btn i { font-size: 13px; }
+        .content-area { padding: 24px; flex: 1; }
+
+        /* PAGES */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* METRIC CARDS */
+        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+        .metric-card { background: #0d1526; border: 0.5px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; position: relative; overflow: hidden; }
+        .metric-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 2px 2px 0 0; }
+        .metric-label { font-size: 10px; color: rgba(255,255,255,0.35); margin-bottom: 8px; letter-spacing: 0.05em; }
+        .metric-val { font-size: 24px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+        .metric-sub { font-size: 10px; color: rgba(255,255,255,0.3); }
+        .rv { color: #F09595; } .av { color: #EF9F27; } .gv { color: #97C459; } .bv { color: #85B7EB; }
+
+        /* PANELS */
+        .panel { background: #0d1526; border: 0.5px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+        .panel-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .panel-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.04em; }
+        .panel-link { font-size: 10px; color: #378ADD; cursor: pointer; text-decoration: none; }
+
+        /* GAUGE */
+        .gauge-wrap { display: flex; align-items: center; justify-content: center; padding: 10px 0 20px; flex-direction: column; }
+
+        /* TABLE */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 0.08em; padding: 8px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.06); text-align: left; }
+        .data-table td { font-size: 12px; color: rgba(255,255,255,0.55); padding: 10px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* BADGES */
+        .badge-high { background: rgba(226,75,74,0.12); border: 0.5px solid rgba(226,75,74,0.25); color: #F09595; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+        .badge-medium { background: rgba(239,159,39,0.12); border: 0.5px solid rgba(239,159,39,0.25); color: #EF9F27; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+        .badge-low { background: rgba(99,153,34,0.12); border: 0.5px solid rgba(99,153,34,0.25); color: #97C459; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+        .badge-ok { background: rgba(99,153,34,0.1); border: 0.5px solid rgba(99,153,34,0.2); color: #97C459; padding: 3px 10px; border-radius: 20px; font-size: 10px; }
+        .badge-fail { background: rgba(226,75,74,0.1); border: 0.5px solid rgba(226,75,74,0.2); color: #F09595; padding: 3px 10px; border-radius: 20px; font-size: 10px; }
+        .badge-na { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); padding: 3px 10px; border-radius: 20px; font-size: 10px; }
+
+        /* SCAN ROWS */
+        .scan-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
+        .scan-row:last-child { border-bottom: none; }
+        .scan-left { display: flex; align-items: center; gap: 12px; }
+        .scan-icon { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+        .scan-name { font-size: 12px; color: rgba(255,255,255,0.65); font-weight: 500; margin-bottom: 2px; }
+        .scan-sub { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+        /* ATTACK SIM */
+        .sim-step { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: rgba(226,75,74,0.06); border: 0.5px solid rgba(226,75,74,0.12); border-radius: 8px; margin-bottom: 6px; }
+        .sim-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(226,75,74,0.2); color: #F09595; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+        .sim-text { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+
+        /* DOOR LOCK */
+        .door-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
+        .door-row:last-child { border-bottom: none; }
+        .door-left { display: flex; align-items: center; gap: 10px; }
+        .door-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.04); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .door-name { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; }
+        .door-sub { font-size: 10px; color: rgba(255,255,255,0.25); }
+        .door-locked { background: rgba(99,153,34,0.12); border: 0.5px solid rgba(99,153,34,0.25); color: #97C459; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .door-unlocked { background: rgba(226,75,74,0.1); border: 0.5px solid rgba(226,75,74,0.2); color: #F09595; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+        /* BENCH */
+        .bench-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .bench-label { font-size: 11px; color: rgba(255,255,255,0.4); width: 100px; flex-shrink: 0; }
+        .bench-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+        .bench-fill { height: 100%; border-radius: 3px; }
+        .bench-val { font-size: 11px; font-weight: 600; min-width: 30px; text-align: right; }
+
+        /* REC */
+        .rec-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+        .rec-row.danger { background: rgba(226,75,74,0.07); border: 0.5px solid rgba(226,75,74,0.12); }
+        .rec-row.warning { background: rgba(239,159,39,0.07); border: 0.5px solid rgba(239,159,39,0.12); }
+        .rec-row.success { background: rgba(99,153,34,0.07); border: 0.5px solid rgba(99,153,34,0.12); }
+        .rec-ico { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+        .danger .rec-ico { background: rgba(226,75,74,0.15); }
+        .warning .rec-ico { background: rgba(239,159,39,0.1); }
+        .rec-cat { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.25); letter-spacing: 0.05em; margin-bottom: 2px; }
+
+        /* EMPTY */
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-title { font-size: 16px; font-weight: 600; color: #E6F1FB; margin-bottom: 8px; }
+        .empty-sub { font-size: 13px; color: rgba(255,255,255,0.3); margin-bottom: 24px; }
+        .btn-start { display: inline-flex; align-items: center; gap: 8px; background: #185FA5; color: white; padding: 12px 28px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none; }
+        .btn-start:hover { background: #378ADD; color: white; text-decoration: none; }
+
+        .two-col { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; }
+        .chart-wrap { position: relative; height: 180px; }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
 <body>
-    <nav class="navbar">
-        <a class="navbar-brand" href="/">🛡️ Cyber<span>Risk AI</span></a>
-        <div style="display:flex;align-items:center;gap:12px">
-            <span style="font-size:13px;color:rgba(255,255,255,0.4)">{{ current_user.company_name }}</span>
-            <a href="/assessment" class="nav-pill">New Scan</a>
-            <a href="/logout" style="font-size:12px;color:rgba(255,255,255,0.3);text-decoration:none">Logout</a>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🛡️</div>
+        <div>
+            <div class="logo-text">CyberRisk AI</div>
+            <div class="logo-sub">THREAT PLATFORM</div>
         </div>
-    </nav>
-
-    <div class="results-wrap">
-
-        <div style="margin-bottom:24px">
-            <div style="font-size:22px;font-weight:600;color:#E6F1FB;margin-bottom:4px">
-                Welcome back, {{ current_user.company_name }} 👋
-            </div>
-            <div style="font-size:14px;color:rgba(255,255,255,0.35)">
-                {{ current_user.industry }} · {{ current_user.employees }} employees · {{ current_user.domain }}
+    </div>
+    <div class="sidebar-nav">
+        <div class="nav-section">OVERVIEW</div>
+        <a class="nav-item active" onclick="showPage('overview')">
+            <i class="ti ti-layout-dashboard"></i> Overview
+        </a>
+        <a class="nav-item" onclick="showPage('scan')">
+            <i class="ti ti-radar"></i> Live scan results
+        </a>
+        <a class="nav-item" onclick="showPage('simulation')">
+            <i class="ti ti-bug"></i> Attack simulation
+            {% if latest %}<span class="nav-badge">!</span>{% endif %}
+        </a>
+        <div class="nav-section">INTELLIGENCE</div>
+        <a class="nav-item" onclick="showPage('recommendations')">
+            <i class="ti ti-robot"></i> AI recommendations
+        </a>
+        <a class="nav-item" onclick="showPage('doorlock')">
+            <i class="ti ti-lock"></i> Door lock score
+        </a>
+        <a class="nav-item" onclick="showPage('benchmark')">
+            <i class="ti ti-chart-bar"></i> Industry benchmark
+        </a>
+        <div class="nav-section">HISTORY</div>
+        <a class="nav-item" onclick="showPage('history')">
+            <i class="ti ti-history"></i> Assessment history
+        </a>
+        <div class="nav-section">REPORTS</div>
+        {% if latest %}
+        <a class="nav-item" href="/download-pdf/{{ latest.id }}">
+            <i class="ti ti-file-text"></i> Download PDF
+        </a>
+        {% endif %}
+        <a class="nav-item" href="/assessment">
+            <i class="ti ti-plus"></i> New assessment
+        </a>
+        <a class="nav-item" href="/logout">
+            <i class="ti ti-logout"></i> Logout
+        </a>
+    </div>
+    <div class="sidebar-bottom">
+        <div class="user-row">
+            <div class="user-av">{{ current_user.company_name[0] }}</div>
+            <div>
+                <div class="user-name">{{ current_user.company_name }}</div>
+                <div class="user-role">{{ current_user.industry }}</div>
             </div>
         </div>
+    </div>
+</div>
 
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <div>
+            <div class="topbar-title" id="page-title">Overview</div>
+            <div class="topbar-sub">{{ current_user.domain }} · {{ current_user.employees }} employees</div>
+        </div>
+        <div class="topbar-right">
+            <a href="/assessment" class="tb-btn"><i class="ti ti-refresh"></i> New scan</a>
+            {% if latest %}
+            <a href="/download-pdf/{{ latest.id }}" class="tb-btn"><i class="ti ti-download"></i> PDF report</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="content-area">
         {% if assessments %}
 
-        <!-- Stats Row -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-            <div class="result-card" style="padding:16px;text-align:center">
-                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">LATEST SCORE</div>
-                <div style="font-size:32px;font-weight:700;color:
-                    {% if assessments[0].risk_level == 'High' %}#F09595
-                    {% elif assessments[0].risk_level == 'Medium' %}#EF9F27
-                    {% else %}#97C459{% endif %}">
-                    {{ assessments[0].score }}
+        <!-- ===== OVERVIEW PAGE ===== -->
+        <div class="page active" id="page-overview">
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-accent" style="background:
+                        {% if latest.risk_level == 'High' %}#E24B4A
+                        {% elif latest.risk_level == 'Medium' %}#EF9F27
+                        {% else %}#639922{% endif %}"></div>
+                    <div class="metric-label">RISK SCORE</div>
+                    <div class="metric-val {% if latest.risk_level == 'High' %}rv{% elif latest.risk_level == 'Medium' %}av{% else %}gv{% endif %}">
+                        {{ latest.score }}
+                    </div>
+                    <div class="metric-sub">out of 100</div>
                 </div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.25)">out of 100</div>
-            </div>
-            <div class="result-card" style="padding:16px;text-align:center">
-                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">RISK LEVEL</div>
-                <div style="font-size:18px;font-weight:600;color:
-                    {% if assessments[0].risk_level == 'High' %}#F09595
-                    {% elif assessments[0].risk_level == 'Medium' %}#EF9F27
-                    {% else %}#97C459{% endif %}">
-                    {{ assessments[0].risk_level }}
+                <div class="metric-card">
+                    <div class="metric-accent" style="background:
+                        {% if latest.risk_level == 'High' %}#E24B4A
+                        {% elif latest.risk_level == 'Medium' %}#EF9F27
+                        {% else %}#639922{% endif %}"></div>
+                    <div class="metric-label">RISK LEVEL</div>
+                    <div class="metric-val {% if latest.risk_level == 'High' %}rv{% elif latest.risk_level == 'Medium' %}av{% else %}gv{% endif %}">
+                        {{ latest.risk_level }}
+                    </div>
+                    <div class="metric-sub">current status</div>
                 </div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.25)">current status</div>
+                <div class="metric-card">
+                    <div class="metric-accent" style="background:#85B7EB"></div>
+                    <div class="metric-label">TOTAL SCANS</div>
+                    <div class="metric-val bv">{{ assessments|length }}</div>
+                    <div class="metric-sub">assessments completed</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-accent" style="background:
+                        {% if assessments|length > 1 and latest.score < assessments[1].score %}#639922
+                        {% elif assessments|length > 1 and latest.score > assessments[1].score %}#E24B4A
+                        {% else %}#85B7EB{% endif %}"></div>
+                    <div class="metric-label">TREND</div>
+                    <div class="metric-val
+                        {% if assessments|length > 1 and latest.score < assessments[1].score %}gv
+                        {% elif assessments|length > 1 and latest.score > assessments[1].score %}rv
+                        {% else %}bv{% endif %}">
+                        {% if assessments|length > 1 %}
+                            {% if latest.score < assessments[1].score %}Improving{% elif latest.score > assessments[1].score %}Worsening{% else %}Stable{% endif %}
+                        {% else %}First scan{% endif %}
+                    </div>
+                    <div class="metric-sub">vs last scan</div>
+                </div>
             </div>
-            <div class="result-card" style="padding:16px;text-align:center">
-                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">TOTAL SCANS</div>
-                <div style="font-size:32px;font-weight:700;color:#85B7EB">{{ assessments|length }}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.25)">assessments done</div>
-            </div>
-            <div class="result-card" style="padding:16px;text-align:center">
-                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">TREND</div>
-                {% if assessments|length > 1 %}
-                    {% if assessments[0].score < assessments[1].score %}
-                        <div style="font-size:24px;font-weight:700;color:#97C459">↓ Improving</div>
-                    {% elif assessments[0].score > assessments[1].score %}
-                        <div style="font-size:24px;font-weight:700;color:#F09595">↑ Worsening</div>
-                    {% else %}
-                        <div style="font-size:24px;font-weight:700;color:#EF9F27">→ Same</div>
-                    {% endif %}
-                {% else %}
-                    <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.3)">First scan</div>
-                {% endif %}
-                <div style="font-size:11px;color:rgba(255,255,255,0.25)">vs last scan</div>
+
+            <div class="two-col">
+                <div class="panel">
+                    <div class="panel-hd">
+                        <span class="panel-title">RISK SCORE HISTORY</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="historyChart"></canvas>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-hd">
+                        <span class="panel-title">RISK GAUGE</span>
+                    </div>
+                    <div class="gauge-wrap">
+                        <svg width="140" height="140" viewBox="0 0 140 140">
+                            <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+                            <circle cx="70" cy="70" r="58" fill="none"
+                                stroke="{% if latest.risk_level == 'High' %}#E24B4A{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#639922{% endif %}"
+                                stroke-width="10" stroke-linecap="round"
+                                stroke-dasharray="364"
+                                stroke-dashoffset="{{ 364 - (latest.score / 100 * 364) }}"
+                                transform="rotate(-90 70 70)"/>
+                            <text x="70" y="65" text-anchor="middle" font-size="28" font-weight="700"
+                                fill="{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}"
+                                font-family="Segoe UI">{{ latest.score }}</text>
+                            <text x="70" y="82" text-anchor="middle" font-size="10"
+                                fill="rgba(255,255,255,0.3)" font-family="Segoe UI">/ 100</text>
+                            <text x="70" y="98" text-anchor="middle" font-size="11" font-weight="600"
+                                fill="{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}"
+                                font-family="Segoe UI">{{ latest.risk_level }} Risk</text>
+                        </svg>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px">
+                            {{ latest.created_at.strftime('%d %b %Y') }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Risk History Chart -->
-        <div class="result-card" style="margin-bottom:16px">
-            <div class="result-card-title">RISK SCORE HISTORY</div>
-            <canvas id="historyChart" height="80"></canvas>
+        <!-- ===== SCAN RESULTS PAGE ===== -->
+        <div class="page" id="page-scan">
+            <div class="panel">
+                <div class="panel-hd"><span class="panel-title">LIVE SCAN RESULTS</span></div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">🔒</div>
+                        <div>
+                            <div class="scan-name">SSL Certificate</div>
+                            <div class="scan-sub">Website encryption status</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.ssl_status == 'valid' %}badge-ok{% else %}badge-fail{% endif %}">
+                        {% if latest.ssl_status == 'valid' %}✓ Valid{% else %}✗ Invalid{% endif %}
+                    </span>
+                </div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">📧</div>
+                        <div>
+                            <div class="scan-name">SPF Record</div>
+                            <div class="scan-sub">Email spoofing protection</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.spf_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">
+                        {% if latest.spf_status == 'found' %}✓ Found{% else %}✗ Missing{% endif %}
+                    </span>
+                </div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">🛡️</div>
+                        <div>
+                            <div class="scan-name">DMARC Record</div>
+                            <div class="scan-sub">Email authentication policy</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.dmarc_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">
+                        {% if latest.dmarc_status == 'found' %}✓ Found{% else %}✗ Missing{% endif %}
+                    </span>
+                </div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">🌑</div>
+                        <div>
+                            <div class="scan-name">Dark Web Monitor</div>
+                            <div class="scan-sub">Credential breach check</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.breach_found %}badge-fail{% else %}badge-ok{% endif %}">
+                        {% if latest.breach_found %}✗ Breached{% else %}✓ Clean{% endif %}
+                    </span>
+                </div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">💊</div>
+                        <div>
+                            <div class="scan-name">Antivirus</div>
+                            <div class="scan-sub">Endpoint protection</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.antivirus == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
+                        {% if latest.antivirus == 'yes' %}✓ Active{% else %}✗ Missing{% endif %}
+                    </span>
+                </div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">🔑</div>
+                        <div>
+                            <div class="scan-name">Multi-Factor Authentication</div>
+                            <div class="scan-sub">Account access protection</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.mfa == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
+                        {% if latest.mfa == 'yes' %}✓ Enabled{% else %}✗ Disabled{% endif %}
+                    </span>
+                </div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">💾</div>
+                        <div>
+                            <div class="scan-name">Data Backups</div>
+                            <div class="scan-sub">Ransomware protection</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.backups == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
+                        {% if latest.backups == 'yes' %}✓ Active{% else %}✗ None{% endif %}
+                    </span>
+                </div>
+                <div class="scan-row">
+                    <div class="scan-left">
+                        <div class="scan-icon">🔐</div>
+                        <div>
+                            <div class="scan-name">Data Encryption</div>
+                            <div class="scan-sub">Data protection</div>
+                        </div>
+                    </div>
+                    <span class="{% if latest.encryption == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
+                        {% if latest.encryption == 'yes' %}✓ Enabled{% else %}✗ Disabled{% endif %}
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <!-- Assessment History -->
-        <div class="result-card">
-            <div class="result-card-title">ASSESSMENT HISTORY</div>
-            {% for a in assessments %}
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:0.5px solid rgba(255,255,255,0.04)">
-                <div>
-                    <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:3px">
-                        {{ a.created_at.strftime('%d %b %Y — %H:%M') }}
-                    </div>
-                    <div style="font-size:11px;color:rgba(255,255,255,0.3)">
-                        SSL: {{ a.ssl_status }} · SPF: {{ a.spf_status }} · DMARC: {{ a.dmarc_status }}
+        <!-- ===== ATTACK SIMULATION PAGE ===== -->
+        <div class="page" id="page-simulation">
+            <div class="panel">
+                <div class="panel-hd">
+                    <span class="panel-title">AI ATTACK SIMULATION</span>
+                    <span style="font-size:10px;color:rgba(255,255,255,0.25)">Powered by OpenAI</span>
+                </div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.6">
+                    Based on your vulnerabilities — here is exactly how a hacker would attack
+                    <strong style="color:rgba(255,255,255,0.6)">{{ current_user.company_name }}</strong> today
+                </div>
+                {% for step in attack_steps %}
+                <div class="sim-step">
+                    <div class="sim-num">{{ loop.index }}</div>
+                    <div class="sim-text">{{ step }}</div>
+                </div>
+                {% endfor %}
+                <div style="margin-top:12px;padding:10px 14px;background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.15);border-radius:8px;font-size:11px;color:rgba(239,159,39,0.7)">
+                    ⚠️ This simulation is based on real attack techniques. Fix the issues in your scan results to close these attack paths.
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RECOMMENDATIONS PAGE ===== -->
+        <div class="page" id="page-recommendations">
+            <div class="panel">
+                <div class="panel-hd"><span class="panel-title">AI RECOMMENDATIONS</span></div>
+                {% for rec in recommendations %}
+                <div class="rec-row {{ rec.type }}">
+                    <div class="rec-ico">{{ rec.icon }}</div>
+                    <div>
+                        <div class="rec-cat">{{ rec.category }}</div>
+                        {{ rec.text }}
                     </div>
                 </div>
-                <div style="text-align:right">
-                    <div style="font-size:20px;font-weight:700;color:
-                        {% if a.risk_level == 'High' %}#F09595
-                        {% elif a.risk_level == 'Medium' %}#EF9F27
-                        {% else %}#97C459{% endif %}">
-                        {{ a.score }}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ===== DOOR LOCK PAGE ===== -->
+        <div class="page" id="page-doorlock">
+            <div class="panel">
+                <div class="panel-hd"><span class="panel-title">🚪 DIGITAL DOOR LOCK SCORE</span></div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
+                    Every night business owners lock their physical doors — but are they locking their digital ones?
+                </div>
+                <div class="door-row">
+                    <div class="door-left">
+                        <div class="door-icon">🚪</div>
+                        <div><div class="door-name">Front door</div><div class="door-sub">MFA — Main account access</div></div>
                     </div>
-                    <div style="font-size:11px;color:
-                        {% if a.risk_level == 'High' %}#F09595
-                        {% elif a.risk_level == 'Medium' %}#EF9F27
-                        {% else %}#97C459{% endif %}">
-                        {{ a.risk_level }} Risk
+                    <span class="{% if latest.mfa == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
+                        {% if latest.mfa == 'yes' %}🔒 Locked{% else %}🔓 Unlocked{% endif %}
+                    </span>
+                </div>
+                <div class="door-row">
+                    <div class="door-left">
+                        <div class="door-icon">🚨</div>
+                        <div><div class="door-name">Alarm system</div><div class="door-sub">Antivirus — Threat detection</div></div>
+                    </div>
+                    <span class="{% if latest.antivirus == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
+                        {% if latest.antivirus == 'yes' %}🔒 Active{% else %}🔓 No alarm{% endif %}
+                    </span>
+                </div>
+                <div class="door-row">
+                    <div class="door-left">
+                        <div class="door-icon">📁</div>
+                        <div><div class="door-name">Safe & vault</div><div class="door-sub">Backups — Data protection</div></div>
+                    </div>
+                    <span class="{% if latest.backups == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
+                        {% if latest.backups == 'yes' %}🔒 Secured{% else %}🔓 No safe{% endif %}
+                    </span>
+                </div>
+                <div class="door-row">
+                    <div class="door-left">
+                        <div class="door-icon">📧</div>
+                        <div><div class="door-name">Letterbox lock</div><div class="door-sub">SPF/DMARC — Email security</div></div>
+                    </div>
+                    <span class="{% if latest.spf_status == 'found' %}door-locked{% else %}door-unlocked{% endif %}">
+                        {% if latest.spf_status == 'found' %}🔒 Protected{% else %}🔓 Open letterbox{% endif %}
+                    </span>
+                </div>
+                <div class="door-row">
+                    <div class="door-left">
+                        <div class="door-icon">🪟</div>
+                        <div><div class="door-name">Windows & doors</div><div class="door-sub">Encryption — Data security</div></div>
+                    </div>
+                    <span class="{% if latest.encryption == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
+                        {% if latest.encryption == 'yes' %}🔒 Closed{% else %}🔓 Open{% endif %}
+                    </span>
+                </div>
+                <div class="door-row">
+                    <div class="door-left">
+                        <div class="door-icon">👥</div>
+                        <div><div class="door-name">Security training</div><div class="door-sub">Staff awareness</div></div>
+                    </div>
+                    <span class="{% if latest.training == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
+                        {% if latest.training == 'yes' %}🔒 Trained{% else %}🔓 Untrained{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== BENCHMARK PAGE ===== -->
+        <div class="page" id="page-benchmark">
+            <div class="panel">
+                <div class="panel-hd"><span class="panel-title">INDUSTRY BENCHMARKING</span></div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:20px">
+                    How does {{ current_user.company_name }} compare to other {{ current_user.industry }} businesses?
+                </div>
+                <div class="bench-row">
+                    <span class="bench-label" style="color:#F09595">Your score</span>
+                    <div class="bench-bar"><div class="bench-fill" style="width:{{ latest.score }}%;background:#E24B4A"></div></div>
+                    <span class="bench-val rv">{{ latest.score }}</span>
+                </div>
+                <div class="bench-row">
+                    <span class="bench-label">Industry avg</span>
+                    <div class="bench-bar"><div class="bench-fill" style="width:48%;background:rgba(255,255,255,0.2)"></div></div>
+                    <span class="bench-val" style="color:rgba(255,255,255,0.4)">48</span>
+                </div>
+                <div class="bench-row">
+                    <span class="bench-label" style="color:#97C459">Top 10%</span>
+                    <div class="bench-bar"><div class="bench-fill" style="width:18%;background:#639922"></div></div>
+                    <span class="bench-val gv">18</span>
+                </div>
+
+                <div style="margin-top:20px;padding:14px 16px;border-radius:8px;
+                    {% if latest.score > 48 %}background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.15)
+                    {% else %}background:rgba(99,153,34,0.08);border:0.5px solid rgba(99,153,34,0.15){% endif %}">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:6px;
+                        {% if latest.score > 48 %}color:#F09595{% else %}color:#97C459{% endif %}">
+                        {% if latest.score > 48 %}
+                            Your business is more vulnerable than the {{ current_user.industry }} average
+                        {% else %}
+                            Your business is more secure than the {{ current_user.industry }} average
+                        {% endif %}
+                    </div>
+                    <div style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.5">
+                        {% if latest.score > 48 %}
+                            Your risk score of {{ latest.score }} is {{ latest.score - 48 }} points above the industry average of 48. Address the critical issues to improve your position.
+                        {% else %}
+                            Your risk score of {{ latest.score }} is {{ 48 - latest.score }} points below the industry average of 48. Keep maintaining these security practices.
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            {% endfor %}
+        </div>
+
+        <!-- ===== HISTORY PAGE ===== -->
+        <div class="page" id="page-history">
+            <div class="panel">
+                <div class="panel-hd"><span class="panel-title">ASSESSMENT HISTORY</span></div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>SCORE</th>
+                            <th>RISK LEVEL</th>
+                            <th>SSL</th>
+                            <th>SPF</th>
+                            <th>DMARC</th>
+                            <th>REPORT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in assessments %}
+                        <tr>
+                            <td>{{ a.created_at.strftime('%d %b %Y — %H:%M') }}</td>
+                            <td style="font-weight:600;color:
+                                {% if a.risk_level == 'High' %}#F09595
+                                {% elif a.risk_level == 'Medium' %}#EF9F27
+                                {% else %}#97C459{% endif %}">{{ a.score }}</td>
+                            <td>
+                                <span class="{% if a.risk_level == 'High' %}badge-high{% elif a.risk_level == 'Medium' %}badge-medium{% else %}badge-low{% endif %}">
+                                    {{ a.risk_level }}
+                                </span>
+                            </td>
+                            <td><span class="{% if a.ssl_status == 'valid' %}badge-ok{% else %}badge-fail{% endif %}">{{ a.ssl_status }}</span></td>
+                            <td><span class="{% if a.spf_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">{{ a.spf_status }}</span></td>
+                            <td><span class="{% if a.dmarc_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">{{ a.dmarc_status }}</span></td>
+                            <td><a href="/download-pdf/{{ a.id }}" style="color:#378ADD;font-size:11px">📄 PDF</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         {% else %}
-        <div class="result-card" style="text-align:center;padding:48px">
-            <div style="font-size:48px;margin-bottom:16px">🛡️</div>
-            <div style="font-size:18px;font-weight:600;color:#E6F1FB;margin-bottom:8px">No scans yet</div>
-            <a href="/assessment" class="btn-retake" style="display:inline-block;width:auto;padding:12px 32px">Start Assessment →</a>
+        <!-- EMPTY STATE -->
+        <div class="empty-state">
+            <div class="empty-icon">🛡️</div>
+            <div class="empty-title">No assessments yet</div>
+            <div class="empty-sub">Run your first scan to see your complete security dashboard</div>
+            <a href="/assessment" class="btn-start">Start First Assessment →</a>
         </div>
         {% endif %}
-
     </div>
+</div>
 
-    <script>
-    {% if assessments|length > 1 %}
-    const labels = [{% for a in assessments|reverse %}"{{ a.created_at.strftime('%d %b') }}"{% if not loop.last %},{% endif %}{% endfor %}];
-    const scores = [{% for a in assessments|reverse %}{{ a.score }}{% if not loop.last %},{% endif %}{% endfor %}];
+<script>
+function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    const titles = {
+        overview: 'Overview',
+        scan: 'Live scan results',
+        simulation: 'AI attack simulation',
+        recommendations: 'AI recommendations',
+        doorlock: 'Digital door lock score',
+        benchmark: 'Industry benchmarking',
+        history: 'Assessment history'
+    };
+    document.getElementById('page-title').textContent = titles[name] || name;
+}
 
-    new Chart(document.getElementById('historyChart'), {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Risk Score',
-                data: scores,
-                borderColor: '#378ADD',
-                backgroundColor: 'rgba(55,138,221,0.1)',
-                borderWidth: 2,
-                pointBackgroundColor: '#378ADD',
-                pointRadius: 4,
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    min: 0, max: 100,
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
-                },
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
-                }
+{% if assessments|length > 0 %}
+const labels = [{% for a in assessments|reverse %}"{{ a.created_at.strftime('%d %b') }}"{% if not loop.last %},{% endif %}{% endfor %}];
+const scores = [{% for a in assessments|reverse %}{{ a.score }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+new Chart(document.getElementById('historyChart'), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Risk Score',
+            data: scores,
+            borderColor: '#378ADD',
+            backgroundColor: 'rgba(55,138,221,0.08)',
+            borderWidth: 2,
+            pointBackgroundColor: '#378ADD',
+            pointRadius: 4,
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { min: 0, max: 100,
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
+            },
+            x: {
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
             }
         }
-    });
-    {% endif %}
-    </script>
+    }
+});
+{% endif %}
+</script>
 </body>
 </html>
