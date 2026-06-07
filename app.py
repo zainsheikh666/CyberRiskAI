@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import db, Company, Assessment
+from pdf_generator import generate_pdf_report
 import requests
 import socket
 import ssl
@@ -24,10 +25,6 @@ def load_user(user_id):
 
 with app.app_context():
     db.create_all()
-
-# ============================================================
-# SCANNER FUNCTIONS
-# ============================================================
 
 def check_ssl(domain):
     try:
@@ -166,7 +163,7 @@ def generate_attack_simulation(company_name, domain, answers, ssl_result, dns_re
     if ssl_result.get('status') == 'invalid':
         issues.append("Invalid SSL certificate")
     if dns_result.get('spf') == 'missing':
-        issues.append("SPF record missing - email spoofing possible")
+        issues.append("SPF record missing")
     if dns_result.get('dmarc') == 'missing':
         issues.append("DMARC record missing")
     issues_text = '\n'.join(f"- {i}" for i in issues) if issues else "- No major issues found"
@@ -178,7 +175,6 @@ Vulnerabilities:
 {issues_text}
 
 Write exactly 4 steps showing how a hacker would attack this business. Each step 1-2 sentences. Use company name. Plain English. Start each with "Step X:"."""
-
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -200,10 +196,6 @@ Write exactly 4 steps showing how a hacker would attack this business. Each step
             "Staff member clicks link — no MFA means attacker instantly has full account access.",
             "Ransomware deployed — no backups means business cannot recover without paying ransom."
         ]
-
-# ============================================================
-# ROUTES
-# ============================================================
 
 @app.route('/')
 def home():
@@ -266,7 +258,6 @@ def assessment():
 def results():
     domain = request.form.get('domain', current_user.domain or '').strip()
     email = request.form.get('email', current_user.email or '').strip()
-
     answers = {
         'antivirus': request.form.get('antivirus', 'no'),
         'mfa': request.form.get('mfa', 'no'),
@@ -275,21 +266,13 @@ def results():
         'passwords': request.form.get('passwords', 'no'),
         'encryption': request.form.get('encryption', 'no'),
     }
-
     ssl_result = check_ssl(domain) if domain else {'status': 'not_checked', 'days_left': 0, 'expires': 'N/A'}
     dns_result = check_dns(domain) if domain else {'spf': 'not_checked', 'dmarc': 'not_checked'}
     breach_result = check_breach(email) if email else {'breached': False, 'count': 0, 'breaches': []}
-
     score, risk_level, risk_message, breakdown = calculate_risk(answers, ssl_result, dns_result, breach_result)
     recommendations = generate_recommendations(answers, ssl_result, dns_result, breach_result)
     attack_simulation = generate_attack_simulation(
-        current_user.company_name,
-        domain,
-        answers,
-        ssl_result,
-        dns_result
-    )
-
+        current_user.company_name, domain, answers, ssl_result, dns_result)
     new_assessment = Assessment(
         company_id=current_user.id,
         score=score,
@@ -307,7 +290,6 @@ def results():
     )
     db.session.add(new_assessment)
     db.session.commit()
-
     return render_template('results.html',
         company_name=current_user.company_name,
         industry=current_user.industry,
@@ -322,7 +304,53 @@ def results():
         answers=answers,
         ssl_result=ssl_result,
         dns_result=dns_result,
-        breach_result=breach_result
+        breach_result=breach_result,
+        assessment_id=new_assessment.id
+    )
+
+@app.route('/download-pdf/<int:assessment_id>')
+@login_required
+def download_pdf(assessment_id):
+    assessment = Assessment.query.get_or_404(assessment_id)
+    if assessment.company_id != current_user.id:
+        return redirect(url_for('dashboard'))
+    answers = {
+        'antivirus': assessment.antivirus,
+        'mfa': assessment.mfa,
+        'backups': assessment.backups,
+        'training': assessment.training,
+        'passwords': assessment.passwords,
+        'encryption': assessment.encryption,
+    }
+    ssl_result = {'status': assessment.ssl_status, 'expires': 'N/A', 'days_left': 0}
+    dns_result = {'spf': assessment.spf_status, 'dmarc': assessment.dmarc_status}
+    breach_result = {'breached': assessment.breach_found, 'count': 0, 'breaches': []}
+    attack_simulation = generate_attack_simulation(
+        current_user.company_name, current_user.domain or '',
+        answers, ssl_result, dns_result)
+    recommendations = generate_recommendations(answers, ssl_result, dns_result, breach_result)
+    score, risk_level, risk_message, breakdown = calculate_risk(answers, ssl_result, dns_result, breach_result)
+    pdf_buffer = generate_pdf_report(
+        company_name=current_user.company_name,
+        industry=current_user.industry,
+        employees=current_user.employees,
+        domain=current_user.domain or '',
+        score=score,
+        risk_level=risk_level,
+        risk_message=risk_message,
+        recommendations=recommendations,
+        breakdown=breakdown,
+        answers=answers,
+        ssl_result=ssl_result,
+        dns_result=dns_result,
+        breach_result=breach_result,
+        attack_simulation=attack_simulation
+    )
+    return send_file(
+        pdf_buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'CyberRiskAI_{current_user.company_name}_{datetime.datetime.now().strftime("%Y%m%d")}.pdf'
     )
 
 if __name__ == '__main__':
