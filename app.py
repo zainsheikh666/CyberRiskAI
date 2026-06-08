@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from dotenv import load_dotenv
+load_dotenv()
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import db, Company, Assessment
 from pdf_generator import generate_pdf_report
