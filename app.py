@@ -28,6 +28,16 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
+def validate_domain(domain):
+    try:
+        domain = domain.replace('https://','').replace('http://','').replace('www.','').strip()
+        if not domain or len(domain) < 4:
+            return False
+        socket.gethostbyname(domain)
+        return True
+    except:
+        return False
+
 def check_ssl(domain):
     try:
         domain = domain.replace('https://','').replace('http://','').replace('www.','').strip()
@@ -249,10 +259,8 @@ def dashboard():
         company_id=current_user.id
     ).order_by(Assessment.created_at.desc()).all()
     latest = assessments[0] if assessments else None
-
     attack_steps = []
     recommendations = []
-
     if latest:
         answers = {
             'antivirus': latest.antivirus,
@@ -265,20 +273,19 @@ def dashboard():
         ssl_result = {'status': latest.ssl_status}
         dns_result = {'spf': latest.spf_status, 'dmarc': latest.dmarc_status}
         breach_result = {'breached': latest.breach_found, 'count': 0, 'breaches': []}
-
         attack_steps = generate_attack_simulation(
             current_user.company_name,
             current_user.domain or '',
             answers, ssl_result, dns_result
         )
         recommendations = generate_recommendations(answers, ssl_result, dns_result, breach_result)
-
     return render_template('dashboard.html',
         assessments=assessments,
         latest=latest,
         attack_steps=attack_steps,
         recommendations=recommendations
     )
+
 @app.route('/assessment')
 @login_required
 def assessment():
@@ -297,6 +304,9 @@ def results():
         'passwords': request.form.get('passwords', 'no'),
         'encryption': request.form.get('encryption', 'no'),
     }
+    if domain and not validate_domain(domain):
+        return render_template('assessment.html',
+            error='This domain does not exist. Please enter a real business domain.')
     ssl_result = check_ssl(domain) if domain else {'status': 'not_checked', 'days_left': 0, 'expires': 'N/A'}
     dns_result = check_dns(domain) if domain else {'spf': 'not_checked', 'dmarc': 'not_checked'}
     breach_result = check_breach(email) if email else {'breached': False, 'count': 0, 'breaches': []}
@@ -383,6 +393,7 @@ def download_pdf(assessment_id):
         as_attachment=True,
         download_name=f'CyberRiskAI_{current_user.company_name}_{datetime.datetime.now().strftime("%Y%m%d")}.pdf'
     )
+
 @app.route('/waitlist', methods=['POST'])
 def waitlist():
     return redirect(url_for('register'))
