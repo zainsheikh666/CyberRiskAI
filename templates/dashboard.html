@@ -152,6 +152,10 @@
         <a class="nav-item" onclick="showPage('simulation')">
             <i class="ti ti-bug"></i> Attack simulation
             {% if latest %}<span class="nav-badge">!</span>{% endif %}
+            </a>
+<a class="nav-item" href="/port-scanner" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:6px;color:rgba(255,255,255,0.35);font-size:12px;text-decoration:none;margin-bottom:2px">
+    <i class="ti ti-network" style="font-size:15px"></i> Port scanner
+</a>
         </a>
         <div class="nav-section">INTELLIGENCE</div>
         <a class="nav-item" onclick="showPage('recommendations')">
@@ -266,6 +270,58 @@
                     <div class="chart-wrap">
                         <canvas id="historyChart"></canvas>
                     </div>
+                    
+                    <!-- Port Scanner Quick Access -->
+
+<div class="panel" style="margin-top:16px;background:linear-gradient(135deg,#0d1526 0%,#0a1020 100%);border:0.5px solid rgba(55,138,221,0.15)">
+    <div class="panel-hd" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:28px;height:28px;background:rgba(55,138,221,0.12);border:0.5px solid rgba(55,138,221,0.25);border-radius:7px;display:flex;align-items:center;justify-content:center">
+                <i class="ti ti-network" style="font-size:14px;color:#378ADD"></i>
+            </div>
+            <div>
+                <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.04em">PORT SCANNER</div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:1px">Real-time TCP scanning</div>
+            </div>
+        </div>
+        <a href="/port-scanner" style="font-size:10px;color:#378ADD;text-decoration:none;display:flex;align-items:center;gap:4px">
+            Full scanner <i class="ti ti-arrow-right" style="font-size:11px"></i>
+        </a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <div style="background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.15);border-radius:8px;padding:10px 12px">
+            <div style="font-size:9px;color:rgba(226,75,74,0.6);letter-spacing:0.06em;margin-bottom:5px">RDP PORT</div>
+            <div style="font-size:14px;font-weight:600;color:#F09595">3389</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">High risk</div>
+        </div>
+        <div style="background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.15);border-radius:8px;padding:10px 12px">
+            <div style="font-size:9px;color:rgba(226,75,74,0.6);letter-spacing:0.06em;margin-bottom:5px">SMB PORT</div>
+            <div style="font-size:14px;font-weight:600;color:#F09595">445</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">Ransomware target</div>
+        </div>
+        <div style="background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.12);border-radius:8px;padding:10px 12px">
+            <div style="font-size:9px;color:rgba(239,159,39,0.6);letter-spacing:0.06em;margin-bottom:5px">SSH PORT</div>
+            <div style="font-size:14px;font-weight:600;color:#EF9F27">22</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">Medium risk</div>
+        </div>
+        <div style="background:rgba(55,138,221,0.06);border:0.5px solid rgba(55,138,221,0.12);border-radius:8px;padding:10px 12px">
+            <div style="font-size:9px;color:rgba(55,138,221,0.5);letter-spacing:0.06em;margin-bottom:5px">PORTS CHECKED</div>
+            <div style="font-size:14px;font-weight:600;color:#85B7EB">12</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">TCP scan</div>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.05);border-radius:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#97C459;box-shadow:0 0 6px rgba(99,153,34,0.5)"></div>
+            <span style="font-size:11px;color:rgba(255,255,255,0.4)">Scanner ready — enter domain to check exposed ports</span>
+        </div>
+        <a href="/port-scanner" style="display:flex;align-items:center;gap:6px;background:#185FA5;color:white;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;transition:all 0.2s">
+            <i class="ti ti-radar" style="font-size:13px"></i> Run scan
+        </a>
+    </div>
+</div>
                 </div>
                 <div class="panel">
                     <div class="panel-hd">

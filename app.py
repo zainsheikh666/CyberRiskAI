@@ -38,6 +38,42 @@ def validate_domain(domain):
     except:
         return False
 
+def check_ports(domain):
+    common_ports = {
+        80: ('HTTP', 'medium'),
+        443: ('HTTPS', 'low'),
+        22: ('SSH', 'medium'),
+        21: ('FTP', 'high'),
+        3389: ('RDP', 'high'),
+        25: ('SMTP', 'medium'),
+        3306: ('MySQL', 'high'),
+        8080: ('HTTP-Alt', 'medium'),
+        445: ('SMB', 'high'),
+        1433: ('MSSQL', 'high'),
+        27017: ('MongoDB', 'high'),
+        6379: ('Redis', 'high'),
+    }
+    open_ports = []
+    closed_ports = []
+    domain_clean = domain.replace('https://','').replace('http://','').replace('www.','').strip()
+    try:
+        ip = socket.gethostbyname(domain_clean)
+    except:
+        return {'found': False, 'ports': [], 'closed': [], 'ip': None, 'total': 0}
+    for port, (service, risk) in common_ports.items():
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex((ip, port))
+            sock.close()
+            if result == 0:
+                open_ports.append({'port': port, 'service': service, 'risk': risk, 'status': 'open'})
+            else:
+                closed_ports.append({'port': port, 'service': service, 'status': 'closed'})
+        except:
+            pass
+    return {'found': True, 'ports': open_ports, 'closed': closed_ports, 'ip': ip, 'total': len(open_ports)}
+
 def check_ssl(domain):
     try:
         domain = domain.replace('https://','').replace('http://','').replace('www.','').strip()
@@ -308,6 +344,7 @@ def results():
         return render_template('assessment.html',
             error='This domain does not exist. Please enter a real business domain.')
     ssl_result = check_ssl(domain) if domain else {'status': 'not_checked', 'days_left': 0, 'expires': 'N/A'}
+    shodan_result = check_ports(domain) if domain else {'found': False, 'ports': [], 'closed': [], 'ip': None, 'total': 0}
     dns_result = check_dns(domain) if domain else {'spf': 'not_checked', 'dmarc': 'not_checked'}
     breach_result = check_breach(email) if email else {'breached': False, 'count': 0, 'breaches': []}
     score, risk_level, risk_message, breakdown = calculate_risk(answers, ssl_result, dns_result, breach_result)
@@ -346,8 +383,25 @@ def results():
         ssl_result=ssl_result,
         dns_result=dns_result,
         breach_result=breach_result,
+        shodan_result=shodan_result,
         assessment_id=new_assessment.id
     )
+
+@app.route('/port-scanner', methods=['GET', 'POST'])
+@login_required
+def port_scanner():
+    result = None
+    domain = ''
+    if request.method == 'POST':
+        domain = request.form.get('domain', '').strip()
+        if domain:
+            if not validate_domain(domain):
+                return render_template('port_scanner.html',
+                    error='This domain does not exist.',
+                    domain=domain, result=None)
+            result = check_ports(domain)
+    return render_template('port_scanner.html',
+        domain=domain, result=result, error=None)
 
 @app.route('/download-pdf/<int:assessment_id>')
 @login_required

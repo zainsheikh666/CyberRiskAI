@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port Scanner — CyberRisk AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #060b18; color: white; font-family: 'Segoe UI', sans-serif; }
+        .navbar { padding: 14px 24px; background: #080e1d; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+        .navbar-brand { font-size: 15px; font-weight: 700; color: #E6F1FB; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .navbar-brand span { color: #378ADD; }
+        .logo-box { width: 28px; height: 28px; background: #185FA5; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .logo-box i { font-size: 14px; color: white; }
+        .back-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 7px; border: 0.5px solid rgba(55,138,221,0.3); color: #85B7EB; font-size: 12px; text-decoration: none; }
+        .back-btn:hover { background: rgba(55,138,221,0.08); color: #85B7EB; }
+        .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
+        .hero { background: #0d1526; border: 0.5px solid rgba(55,138,221,0.2); border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+        .hero-title { font-size: 20px; font-weight: 700; color: #E6F1FB; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .hero-title i { color: #378ADD; font-size: 22px; }
+        .hero-sub { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 20px; line-height: 1.6; }
+        .input-row { display: flex; gap: 10px; }
+        .scan-input { flex: 1; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(55,138,221,0.3); border-radius: 8px; color: white; padding: 12px 16px; font-size: 14px; outline: none; }
+        .scan-input:focus { border-color: #378ADD; }
+        .scan-input::placeholder { color: rgba(255,255,255,0.2); }
+        .scan-btn { background: #185FA5; color: white; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .scan-btn:hover { background: #378ADD; }
+        .scan-btn i { font-size: 16px; }
+        .error-box { background: rgba(226,75,74,0.1); border: 0.5px solid rgba(226,75,74,0.3); color: #F09595; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+        .stat-box { background: #0d1526; border: 0.5px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 14px 16px; text-align: center; }
+        .stat-val { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+        .stat-lbl { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.04em; }
+        .panel { background: #0d1526; border: 0.5px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px; margin-bottom: 12px; }
+        .panel-title { font-size: 10px; font-weight: 600; color: #378ADD; letter-spacing: 0.08em; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+        .count-badge { background: rgba(55,138,221,0.1); border: 0.5px solid rgba(55,138,221,0.2); color: #85B7EB; padding: 3px 10px; border-radius: 20px; font-size: 10px; }
+        .port-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 8px; margin-bottom: 6px; }
+        .port-item.high { background: rgba(226,75,74,0.08); border: 0.5px solid rgba(226,75,74,0.15); }
+        .port-item.medium { background: rgba(239,159,39,0.07); border: 0.5px solid rgba(239,159,39,0.12); }
+        .port-item.low { background: rgba(99,153,34,0.07); border: 0.5px solid rgba(99,153,34,0.12); }
+        .port-left { display: flex; align-items: center; gap: 14px; }
+        .port-num { font-size: 18px; font-weight: 700; min-width: 55px; }
+        .high-num { color: #F09595; }
+        .medium-num { color: #EF9F27; }
+        .low-num { color: #97C459; }
+        .port-service { font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 500; margin-bottom: 2px; }
+        .port-desc { font-size: 11px; color: rgba(255,255,255,0.25); }
+        .risk-badge { font-size: 10px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+        .rb-high { background: rgba(226,75,74,0.15); border: 0.5px solid rgba(226,75,74,0.3); color: #F09595; }
+        .rb-medium { background: rgba(239,159,39,0.12); border: 0.5px solid rgba(239,159,39,0.25); color: #EF9F27; }
+        .rb-low { background: rgba(99,153,34,0.1); border: 0.5px solid rgba(99,153,34,0.2); color: #97C459; }
+        .warning-box { padding: 12px 16px; background: rgba(226,75,74,0.07); border: 0.5px solid rgba(226,75,74,0.15); border-radius: 8px; font-size: 12px; color: rgba(240,149,149,0.8); margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+        .warning-box i { font-size: 14px; flex-shrink: 0; }
+        .closed-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid rgba(255,255,255,0.03); font-size: 11px; color: rgba(255,255,255,0.25); }
+        .closed-row:last-child { border: none; }
+        .empty-state { text-align: center; padding: 48px 20px; }
+        .empty-icon { font-size: 44px; color: rgba(55,138,221,0.3); margin-bottom: 14px; }
+        .empty-title { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
+        .empty-sub { font-size: 12px; color: rgba(255,255,255,0.2); }
+        .success-box { text-align: center; padding: 28px; }
+        .success-box i { font-size: 36px; color: #97C459; display: block; margin-bottom: 10px; }
+        .success-title { font-size: 14px; font-weight: 600; color: #97C459; margin-bottom: 4px; }
+        .success-sub { font-size: 12px; color: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">
+            <div class="logo-box"><i class="ti ti-shield-lock"></i></div>
+            Cyber<span>Risk AI</span>
+        </a>
+        <a href="/dashboard" class="back-btn"><i class="ti ti-arrow-left"></i> Back to dashboard</a>
+    </nav>
+
+    <div class="wrap">
+        <div class="hero">
+            <div class="hero-title"><i class="ti ti-network"></i> Port Scanner</div>
+            <div class="hero-sub">
+                Real-time TCP port scanning — discover exposed services on any domain.
+                Checks 12 common attack surface ports including RDP, SSH, FTP, MySQL and SMB.
+            </div>
+
+            {% if error %}
+            <div class="error-box"><i class="ti ti-alert-circle"></i> {{ error }}</div>
+            {% endif %}
+
+            <form action="/port-scanner" method="POST">
+                <div class="input-row">
+                    <input type="text" class="scan-input" name="domain"
+                        value="{{ domain }}"
+                        placeholder="Enter domain — e.g. bbc.co.uk or microsoft.com" required>
+                    <button type="submit" class="scan-btn">
+                        <i class="ti ti-radar"></i> Scan now
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if result and result.found %}
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-val" style="color:{% if result.total > 3 %}#F09595{% elif result.total > 0 %}#EF9F27{% else %}#97C459{% endif %}">
+                    {{ result.total }}
+                </div>
+                <div class="stat-lbl">OPEN PORTS</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" style="color:#F09595">
+                    {{ result.ports | selectattr('risk', 'equalto', 'high') | list | length }}
+                </div>
+                <div class="stat-lbl">HIGH RISK</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" style="color:#85B7EB;font-size:16px;padding-top:6px">
+                    {{ result.ip or 'N/A' }}
+                </div>
+                <div class="stat-lbl">IP ADDRESS</div>
+            </div>
+        </div>
+
+        {% if result.ports %}
+        <div class="panel">
+            <div class="panel-title">
+                OPEN PORTS DETECTED
+                <span class="count-badge">{{ result.total }} open</span>
+            </div>
+
+            {% for p in result.ports %}
+            <div class="port-item {{ p.risk }}">
+                <div class="port-left">
+                    <span class="port-num {{ p.risk }}-num">{{ p.port }}</span>
+                    <div>
+                        <div class="port-service">{{ p.service }}</div>
+                        <div class="port-desc">
+                            {% if p.port == 3389 %}Remote Desktop — attackers can brute force this port
+                            {% elif p.port == 21 %}FTP — unencrypted file transfer, credentials exposed
+                            {% elif p.port == 22 %}SSH — secure shell, ensure strong passwords or key auth
+                            {% elif p.port == 445 %}SMB — Windows file sharing, common ransomware target
+                            {% elif p.port == 3306 %}MySQL database — should never be publicly accessible
+                            {% elif p.port == 1433 %}MSSQL database — should never be publicly accessible
+                            {% elif p.port == 27017 %}MongoDB — often misconfigured with no authentication
+                            {% elif p.port == 6379 %}Redis — often requires no password by default
+                            {% elif p.port == 80 %}HTTP — unencrypted web traffic
+                            {% elif p.port == 443 %}HTTPS — encrypted web traffic, this is expected
+                            {% elif p.port == 8080 %}Alternative HTTP port — check if this is intentional
+                            {% elif p.port == 25 %}SMTP email server
+                            {% else %}Check if this port should be publicly accessible
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <span class="risk-badge rb-{{ p.risk }}">
+                    {% if p.risk == 'high' %}⚠ High risk
+                    {% elif p.risk == 'medium' %}Medium
+                    {% else %}✓ Low risk{% endif %}
+                </span>
+            </div>
+            {% endfor %}
+
+            {% set high_count = result.ports | selectattr('risk', 'equalto', 'high') | list | length %}
+            {% if high_count > 0 %}
+            <div class="warning-box">
+                <i class="ti ti-alert-triangle"></i>
+                {{ high_count }} high-risk port(s) detected — these should be closed or firewalled immediately to prevent unauthorised access.
+            </div>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <div class="panel">
+            <div class="success-box">
+                <i class="ti ti-shield-check"></i>
+                <div class="success-title">No high-risk ports detected</div>
+                <div class="success-sub">All common attack surface ports are closed on {{ domain }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if result.closed %}
+        <div class="panel">
+            <div class="panel-title">CLOSED PORTS — SECURE</div>
+            {% for p in result.closed %}
+            <div class="closed-row">
+                <span>Port {{ p.port }} — {{ p.service }}</span>
+                <span style="color:#97C459;font-size:10px;font-weight:600">✓ Closed</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="panel">
+            <div class="empty-state">
+                <div class="empty-icon"><i class="ti ti-network"></i></div>
+                <div class="empty-title">Enter a domain above to start scanning</div>
+                <div class="empty-sub">We will check 12 common ports for exposure in real time</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

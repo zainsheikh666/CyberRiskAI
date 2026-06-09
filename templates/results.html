@@ -15,18 +15,14 @@
 
     <div class="results-wrap">
 
-        <!-- Score Hero -->
         <div class="score-hero {{ risk_level|lower }}">
             <div class="score-company">{{ company_name }} &nbsp;·&nbsp; {{ industry }} &nbsp;·&nbsp; {{ employees }} employees</div>
-
             <div class="score-ring">
                 <svg width="160" height="160" viewBox="0 0 160 160">
                     <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"/>
                     <circle cx="80" cy="80" r="70" fill="none"
                         stroke="{% if risk_level == 'High' %}#E24B4A{% elif risk_level == 'Medium' %}#EF9F27{% else %}#639922{% endif %}"
-                        stroke-width="12"
-                        stroke-linecap="round"
-                        stroke-dasharray="440"
+                        stroke-width="12" stroke-linecap="round" stroke-dasharray="440"
                         stroke-dashoffset="{{ 440 - (score / 100 * 440) }}"
                         style="transition: stroke-dashoffset 1s ease"/>
                 </svg>
@@ -35,7 +31,6 @@
                     <div class="score-out">/ 100</div>
                 </div>
             </div>
-
             <div class="risk-pill {{ risk_level|lower }}">
                 {% if risk_level == 'High' %}🚨{% elif risk_level == 'Medium' %}⚠️{% else %}✅{% endif %}
                 {{ risk_level }} Risk
@@ -43,23 +38,17 @@
             <div class="risk-msg">{{ risk_message }}</div>
         </div>
 
-        <!-- Live Scan Results -->
         <div class="result-card">
             <div class="result-card-title">Live Scan Results</div>
-
             <div class="scan-row">
                 <div class="scan-left">
                     <div class="scan-icon">🔒</div>
                     <div>
                         <div class="scan-name">SSL Certificate</div>
                         <div class="scan-sub">
-                            {% if ssl_result.status == 'valid' %}
-                                Valid — expires {{ ssl_result.expires }} ({{ ssl_result.days_left }} days left)
-                            {% elif ssl_result.status == 'invalid' %}
-                                Invalid or missing — data is NOT encrypted
-                            {% else %}
-                                Domain not provided
-                            {% endif %}
+                            {% if ssl_result.status == 'valid' %}Valid — expires {{ ssl_result.expires }} ({{ ssl_result.days_left }} days left)
+                            {% elif ssl_result.status == 'invalid' %}Invalid or missing — data is NOT encrypted
+                            {% else %}Domain not provided{% endif %}
                         </div>
                     </div>
                 </div>
@@ -69,20 +58,15 @@
                     {% else %}✗ Issue Found{% endif %}
                 </span>
             </div>
-
             <div class="scan-row">
                 <div class="scan-left">
                     <div class="scan-icon">📧</div>
                     <div>
                         <div class="scan-name">SPF Record</div>
                         <div class="scan-sub">
-                            {% if dns_result.spf == 'found' %}
-                                SPF record found — email spoofing protection active
-                            {% elif dns_result.spf == 'missing' %}
-                                Missing — attackers can spoof your email domain
-                            {% else %}
-                                Domain not provided
-                            {% endif %}
+                            {% if dns_result.spf == 'found' %}SPF record found — email spoofing protection active
+                            {% elif dns_result.spf == 'missing' %}Missing — attackers can spoof your email domain
+                            {% else %}Domain not provided{% endif %}
                         </div>
                     </div>
                 </div>
@@ -92,20 +76,15 @@
                     {% else %}✗ Missing{% endif %}
                 </span>
             </div>
-
             <div class="scan-row">
                 <div class="scan-left">
                     <div class="scan-icon">🛡️</div>
                     <div>
                         <div class="scan-name">DMARC Record</div>
                         <div class="scan-sub">
-                            {% if dns_result.dmarc == 'found' %}
-                                DMARC policy found — email authentication active
-                            {% elif dns_result.dmarc == 'missing' %}
-                                Missing — your email domain is not protected
-                            {% else %}
-                                Domain not provided
-                            {% endif %}
+                            {% if dns_result.dmarc == 'found' %}DMARC policy found — email authentication active
+                            {% elif dns_result.dmarc == 'missing' %}Missing — your email domain is not protected
+                            {% else %}Domain not provided{% endif %}
                         </div>
                     </div>
                 </div>
@@ -115,20 +94,15 @@
                     {% else %}✗ Missing{% endif %}
                 </span>
             </div>
-
-            <div class="scan-row" style="margin-bottom:0">
+            <div class="scan-row">
                 <div class="scan-left">
                     <div class="scan-icon">🌑</div>
                     <div>
                         <div class="scan-name">Dark Web Breach Check</div>
                         <div class="scan-sub">
-                            {% if breach_result.breached %}
-                                Found in {{ breach_result.count }} breach(es) — {{ breach_result.breaches|join(', ') }}
-                            {% elif breach_result.get('error') %}
-                                Could not check — try again later
-                            {% else %}
-                                No breaches found for this email
-                            {% endif %}
+                            {% if breach_result.breached %}Found in {{ breach_result.count }} breach(es) — {{ breach_result.breaches|join(', ') }}
+                            {% elif breach_result.get('error') %}Could not check — try again later
+                            {% else %}No breaches found for this email{% endif %}
                         </div>
                     </div>
                 </div>
@@ -139,45 +113,56 @@
                 </span>
             </div>
 
+            {% if shodan_result.found and shodan_result.ports %}
+            <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.05)">
+                <div style="font-size:10px;font-weight:600;color:#378ADD;letter-spacing:0.07em;margin-bottom:8px">SHODAN — OPEN PORTS (REAL DATA)</div>
+                {% for p in shodan_result.ports %}
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:4px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.7)">Port {{ p.port }}</span>
+                        <span style="font-size:11px;color:rgba(255,255,255,0.35)">{{ p.service }}</span>
+                    </div>
+                    <span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;
+                        {% if p.risk == 'high' %}background:rgba(226,75,74,0.1);border:0.5px solid rgba(226,75,74,0.2);color:#F09595{% elif p.risk == 'medium' %}background:rgba(239,159,39,0.1);border:0.5px solid rgba(239,159,39,0.2);color:#EF9F27{% else %}background:rgba(99,153,34,0.1);border:0.5px solid rgba(99,153,34,0.2);color:#97C459{% endif %}">
+                        {% if p.risk == 'high' %}⚠ High risk{% elif p.risk == 'medium' %}Medium{% else %}Low risk{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        <!-- AI Attack Simulation -->
-<div class="result-card">
-    <div class="result-card-title">🎯 AI ATTACK SIMULATION</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
-        Based on your vulnerabilities, here is exactly how a hacker would attack <strong style="color:rgba(255,255,255,0.6)">{{ company_name }}</strong> today —
-    </div>
 
-    {% for step in attack_simulation %}
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(226,75,74,0.06);border:0.5px solid rgba(226,75,74,0.15);border-radius:10px;margin-bottom:8px">
-        <div style="width:28px;height:28px;border-radius:50%;background:rgba(226,75,74,0.2);border:1px solid rgba(226,75,74,0.4);color:#F09595;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-            {{ loop.index }}
+        <div class="result-card">
+            <div class="result-card-title">🎯 AI Attack Simulation</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
+                Based on your vulnerabilities — here is exactly how a hacker would attack <strong style="color:rgba(255,255,255,0.6)">{{ company_name }}</strong> today —
+            </div>
+            {% for step in attack_simulation %}
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(226,75,74,0.06);border:0.5px solid rgba(226,75,74,0.15);border-radius:10px;margin-bottom:8px">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(226,75,74,0.2);border:1px solid rgba(226,75,74,0.4);color:#F09595;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+                    {{ loop.index }}
+                </div>
+                <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6">{{ step }}</div>
+            </div>
+            {% endfor %}
+            <div style="margin-top:12px;padding:12px 16px;background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.2);border-radius:8px;font-size:12px;color:rgba(239,159,39,0.8)">
+                ⚠️ This simulation is based on real attack techniques. Fix the issues above to close these attack paths.
+            </div>
         </div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6">
-            {{ step }}
-        </div>
-    </div>
-    {% endfor %}
 
-    <div style="margin-top:12px;padding:12px 16px;background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.2);border-radius:8px;font-size:12px;color:rgba(239,159,39,0.8)">
-        ⚠️ This simulation is based on real attack techniques used against SMEs. Fix the issues above to close these attack paths.
-    </div>
-</div>
-
-        <!-- AI Recommendations -->
         <div class="result-card">
             <div class="result-card-title">AI Recommendations</div>
             {% for rec in recommendations %}
             <div class="rec-row {{ rec.type }}">
                 <div class="rec-icon-wrap">{{ rec.icon }}</div>
                 <div>
-                    <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.35); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.05em;">{{ rec.category }}</div>
+                    <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em;">{{ rec.category }}</div>
                     <span>{{ rec.text }}</span>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Risk Breakdown -->
         <div class="result-card">
             <div class="result-card-title">Risk Score Breakdown</div>
             {% for item in breakdown %}
@@ -190,128 +175,54 @@
             </div>
             {% endfor %}
             {% if not breakdown %}
-            <div style="font-size:13px; color:rgba(255,255,255,0.3); text-align:center; padding:16px 0;">No risk factors found — excellent!</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:16px 0">No risk factors found — excellent!</div>
             {% endif %}
         </div>
 
-        <!-- Your Answers -->
         <div class="result-card">
             <div class="result-card-title">Your Answers</div>
-            <div class="ans-row">
-                <span>Antivirus software</span>
-                <span class="{{ 'ans-yes' if answers.antivirus == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.antivirus == 'yes' else 'No ✗' }}</span>
-            </div>
-            <div class="ans-row">
-                <span>Multi-Factor Authentication</span>
-                <span class="{{ 'ans-yes' if answers.mfa == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.mfa == 'yes' else 'No ✗' }}</span>
-            </div>
-            <div class="ans-row">
-                <span>Regular data backups</span>
-                <span class="{{ 'ans-yes' if answers.backups == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.backups == 'yes' else 'No ✗' }}</span>
-            </div>
-            <div class="ans-row">
-                <span>Cybersecurity training</span>
-                <span class="{{ 'ans-yes' if answers.training == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.training == 'yes' else 'No ✗' }}</span>
-            </div>
-            <div class="ans-row">
-                <span>Strong password policies</span>
-                <span class="{{ 'ans-yes' if answers.passwords == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.passwords == 'yes' else 'No ✗' }}</span>
-            </div>
-            <div class="ans-row">
-                <span>Data encryption</span>
-                <span class="{{ 'ans-yes' if answers.encryption == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.encryption == 'yes' else 'No ✗' }}</span>
-            </div>
+            <div class="ans-row"><span>Antivirus software</span><span class="{{ 'ans-yes' if answers.antivirus == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.antivirus == 'yes' else 'No ✗' }}</span></div>
+            <div class="ans-row"><span>Multi-Factor Authentication</span><span class="{{ 'ans-yes' if answers.mfa == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.mfa == 'yes' else 'No ✗' }}</span></div>
+            <div class="ans-row"><span>Regular data backups</span><span class="{{ 'ans-yes' if answers.backups == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.backups == 'yes' else 'No ✗' }}</span></div>
+            <div class="ans-row"><span>Cybersecurity training</span><span class="{{ 'ans-yes' if answers.training == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.training == 'yes' else 'No ✗' }}</span></div>
+            <div class="ans-row"><span>Strong password policies</span><span class="{{ 'ans-yes' if answers.passwords == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.passwords == 'yes' else 'No ✗' }}</span></div>
+            <div class="ans-row"><span>Data encryption</span><span class="{{ 'ans-yes' if answers.encryption == 'yes' else 'ans-no' }}">{{ 'Yes ✓' if answers.encryption == 'yes' else 'No ✗' }}</span></div>
         </div>
-        <!-- Digital Door Lock Score -->
-<div class="result-card">
-    <div class="result-card-title">🚪 DIGITAL DOOR LOCK SCORE</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
-        Every night business owners lock their physical doors — but are they locking their digital ones?
-    </div>
 
-    <div class="door-row">
-        <div class="door-left">
-            <div class="door-icon">🚪</div>
-            <div>
-                <div class="door-name">Front door</div>
-                <div class="door-sub">Main account access — MFA</div>
+        <div class="result-card">
+            <div class="result-card-title">🚪 Digital Door Lock Score</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
+                Every night business owners lock their physical doors — but are they locking their digital ones?
+            </div>
+            <div class="door-row">
+                <div class="door-left"><div class="door-icon">🚪</div><div><div class="door-name">Front door</div><div class="door-sub">Main account access — MFA</div></div></div>
+                <div class="door-status {{ 'locked' if answers.mfa == 'yes' else 'unlocked' }}">{{ '🔒 Locked' if answers.mfa == 'yes' else '🔓 Unlocked' }}</div>
+            </div>
+            <div class="door-row">
+                <div class="door-left"><div class="door-icon">🚨</div><div><div class="door-name">Alarm system</div><div class="door-sub">Threat monitoring — Antivirus</div></div></div>
+                <div class="door-status {{ 'locked' if answers.antivirus == 'yes' else 'unlocked' }}">{{ '🔒 Active' if answers.antivirus == 'yes' else '🔓 No alarm' }}</div>
+            </div>
+            <div class="door-row">
+                <div class="door-left"><div class="door-icon">📁</div><div><div class="door-name">Safe & vault</div><div class="door-sub">Data protection — Backups</div></div></div>
+                <div class="door-status {{ 'locked' if answers.backups == 'yes' else 'unlocked' }}">{{ '🔒 Secured' if answers.backups == 'yes' else '🔓 No safe' }}</div>
+            </div>
+            <div class="door-row">
+                <div class="door-left"><div class="door-icon">📧</div><div><div class="door-name">Letterbox lock</div><div class="door-sub">Email security — SPF/DMARC</div></div></div>
+                <div class="door-status {{ 'locked' if dns_result.spf == 'found' else 'unlocked' }}">{{ '🔒 Protected' if dns_result.spf == 'found' else '🔓 Open letterbox' }}</div>
+            </div>
+            <div class="door-row">
+                <div class="door-left"><div class="door-icon">🪟</div><div><div class="door-name">Windows & doors</div><div class="door-sub">Encryption — Data security</div></div></div>
+                <div class="door-status {{ 'locked' if answers.encryption == 'yes' else 'unlocked' }}">{{ '🔒 Closed' if answers.encryption == 'yes' else '🔓 Windows open' }}</div>
+            </div>
+            <div class="door-row" style="margin-bottom:0">
+                <div class="door-left"><div class="door-icon">👥</div><div><div class="door-name">Security training</div><div class="door-sub">Staff awareness — Human risk</div></div></div>
+                <div class="door-status {{ 'locked' if answers.training == 'yes' else 'unlocked' }}">{{ '🔒 Trained' if answers.training == 'yes' else '🔓 Untrained staff' }}</div>
             </div>
         </div>
-        <div class="door-status {{ 'locked' if answers.mfa == 'yes' else 'unlocked' }}">
-            {{ '🔒 Locked' if answers.mfa == 'yes' else '🔓 Unlocked' }}
-        </div>
-    </div>
 
-    <div class="door-row">
-        <div class="door-left">
-            <div class="door-icon">🚨</div>
-            <div>
-                <div class="door-name">Alarm system</div>
-                <div class="door-sub">Threat monitoring — Antivirus</div>
-            </div>
-        </div>
-        <div class="door-status {{ 'locked' if answers.antivirus == 'yes' else 'unlocked' }}">
-            {{ '🔒 Active' if answers.antivirus == 'yes' else '🔓 No alarm' }}
-        </div>
-    </div>
-
-    <div class="door-row">
-        <div class="door-left">
-            <div class="door-icon">📁</div>
-            <div>
-                <div class="door-name">Safe & vault</div>
-                <div class="door-sub">Data protection — Backups</div>
-            </div>
-        </div>
-        <div class="door-status {{ 'locked' if answers.backups == 'yes' else 'unlocked' }}">
-            {{ '🔒 Secured' if answers.backups == 'yes' else '🔓 No safe' }}
-        </div>
-    </div>
-
-    <div class="door-row">
-        <div class="door-left">
-            <div class="door-icon">📧</div>
-            <div>
-                <div class="door-name">Letterbox lock</div>
-                <div class="door-sub">Email security — SPF/DMARC</div>
-            </div>
-        </div>
-        <div class="door-status {{ 'locked' if dns_result.spf == 'found' else 'unlocked' }}">
-            {{ '🔒 Protected' if dns_result.spf == 'found' else '🔓 Open letterbox' }}
-        </div>
-    </div>
-
-    <div class="door-row">
-        <div class="door-left">
-            <div class="door-icon">🪟</div>
-            <div>
-                <div class="door-name">Windows & doors</div>
-                <div class="door-sub">Encryption — Data security</div>
-            </div>
-        </div>
-        <div class="door-status {{ 'locked' if answers.encryption == 'yes' else 'unlocked' }}">
-            {{ '🔒 Closed' if answers.encryption == 'yes' else '🔓 Windows open' }}
-        </div>
-    </div>
-
-    <div class="door-row" style="margin-bottom:0">
-        <div class="door-left">
-            <div class="door-icon">👥</div>
-            <div>
-                <div class="door-name">Security training</div>
-                <div class="door-sub">Staff awareness — Human risk</div>
-            </div>
-        </div>
-        <div class="door-status {{ 'locked' if answers.training == 'yes' else 'unlocked' }}">
-            {{ '🔒 Trained' if answers.training == 'yes' else '🔓 Untrained staff' }}
-        </div>
-    </div>
-
-</div>
-<a href="/download-pdf/{{ assessment_id }}" class="btn-retake" style="background:#185FA5;margin-bottom:8px">
-    📄 Download PDF Report
-</a>
-
+        <a href="/download-pdf/{{ assessment_id }}" class="btn-retake" style="background:#185FA5;margin-bottom:8px">
+            📄 Download PDF Report
+        </a>
         <a href="/assessment" class="btn-retake">← Take Assessment Again</a>
 
     </div>
