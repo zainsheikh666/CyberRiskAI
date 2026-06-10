@@ -426,8 +426,6 @@ def live_monitor():
 
 @app.route('/ai-advisor', methods=['POST'])
 @login_required
-@app.route('/ai-advisor', methods=['POST'])
-@login_required
 def ai_advisor():
     try:
         from groq import Groq
@@ -452,7 +450,7 @@ Antivirus: {latest.antivirus if latest else 'N/A'}
 Backups: {latest.backups if latest else 'N/A'}
 Answer in plain English. Be specific. Max 3-4 sentences."""
         response = client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": context},
                 {"role": "user", "content": question}
