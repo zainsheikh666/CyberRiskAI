@@ -3,690 +3,767 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — CyberRisk AI</title>
+    <title>CyberRisk AI — Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #060b18; font-family: 'Segoe UI', sans-serif; display: flex; min-height: 100vh; }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#060d1a;color:white;font-family:'Segoe UI',sans-serif;overflow-x:hidden}
+
+        /* TOPBAR */
+        .topbar{position:fixed;top:0;left:0;right:0;height:52px;background:#080f1e;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 16px;gap:12px;z-index:200}
+        .topbar-logo{display:flex;align-items:center;gap:8px;width:220px;flex-shrink:0}
+        .logo-icon{width:28px;height:28px;background:linear-gradient(135deg,#185FA5,#378ADD);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .logo-icon i{font-size:14px;color:white}
+        .logo-name{font-size:13px;font-weight:700;color:#E6F1FB}
+        .logo-name span{color:#378ADD}
+        .logo-version{font-size:9px;background:rgba(55,138,221,0.2);border:0.5px solid rgba(55,138,221,0.3);color:#85B7EB;padding:1px 5px;border-radius:4px;margin-left:4px}
+        .logo-sub{font-size:8px;color:rgba(255,255,255,0.25);margin-top:1px}
+        .topbar-company{display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:7px;cursor:pointer}
+        .company-dot{width:7px;height:7px;border-radius:50%;background:#97C459}
+        .company-name{font-size:12px;color:rgba(255,255,255,0.7);font-weight:500}
+        .topbar-search{flex:1;max-width:320px;margin:0 auto}
+        .search-inner{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:7px;padding:6px 12px}
+        .search-inner i{font-size:13px;color:rgba(255,255,255,0.3)}
+        .search-inner input{background:none;border:none;outline:none;color:rgba(255,255,255,0.5);font-size:12px;width:100%}
+        .search-inner input::placeholder{color:rgba(255,255,255,0.2)}
+        .topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+        .quick-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none}
+        .quick-btn i{font-size:13px}
+        .tb-icon-btn{width:32px;height:32px;border-radius:6px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+        .tb-icon-btn i{font-size:15px;color:rgba(255,255,255,0.5)}
+        .notif-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#E24B4A;border:1.5px solid #080f1e}
+        .user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#185FA5,#378ADD);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;cursor:pointer}
 
         /* SIDEBAR */
-        .sidebar { width: 220px; background: #080e1d; border-right: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
-        .sidebar-logo { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
-        .logo-icon { width: 32px; height: 32px; background: #185FA5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-        .logo-text { font-size: 14px; font-weight: 600; color: #E6F1FB; }
-        .logo-sub { font-size: 9px; color: #378ADD; letter-spacing: 0.05em; }
-        .sidebar-nav { padding: 12px 8px; flex: 1; overflow-y: auto; }
-        .nav-section { font-size: 9px; color: rgba(255,255,255,0.25); padding: 12px 8px 5px; letter-spacing: 0.08em; }
-        .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 6px; color: rgba(255,255,255,0.35); font-size: 12px; cursor: pointer; margin-bottom: 2px; text-decoration: none; transition: all 0.15s; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); text-decoration: none; }
-        .nav-item.active { background: rgba(55,138,221,0.12); color: #85B7EB; border-left: 2px solid #378ADD; border-radius: 0 6px 6px 0; }
-        .nav-item i { font-size: 15px; flex-shrink: 0; }
-        .nav-badge { margin-left: auto; font-size: 9px; background: rgba(226,75,74,0.2); color: #F09595; border: 0.5px solid rgba(226,75,74,0.3); padding: 1px 6px; border-radius: 3px; }
-        .sidebar-bottom { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.06); }
-        .user-row { display: flex; align-items: center; gap: 8px; }
-        .user-av { width: 28px; height: 28px; border-radius: 50%; background: rgba(55,138,221,0.2); border: 1px solid rgba(55,138,221,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #85B7EB; flex-shrink: 0; }
-        .user-name { font-size: 11px; color: rgba(255,255,255,0.5); }
-        .user-role { font-size: 10px; color: rgba(255,255,255,0.25); }
+        .sidebar{position:fixed;top:52px;left:0;bottom:0;width:220px;background:#080f1e;border-right:1px solid rgba(255,255,255,0.05);overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column}
+        .sidebar::-webkit-scrollbar{width:3px}
+        .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+        .s-sec{font-size:8px;color:rgba(255,255,255,0.2);padding:12px 8px 4px;letter-spacing:0.1em;font-weight:600}
+        .s-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;color:rgba(255,255,255,0.4);font-size:11px;cursor:pointer;margin-bottom:1px;text-decoration:none;transition:all 0.15s}
+        .s-item:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.65);text-decoration:none}
+        .s-item.active{background:rgba(55,138,221,0.12);color:#85B7EB;border-left:2px solid #378ADD;border-radius:0 6px 6px 0;padding-left:8px}
+        .s-item i{font-size:14px;flex-shrink:0}
+        .s-badge{margin-left:auto;font-size:8px;padding:1px 6px;border-radius:3px;font-weight:600}
+        .s-badge.new{background:rgba(99,153,34,0.2);border:0.5px solid rgba(99,153,34,0.3);color:#97C459}
+        .s-badge.alert{background:rgba(226,75,74,0.2);border:0.5px solid rgba(226,75,74,0.3);color:#F09595}
+        .sidebar-bottom{margin-top:auto;padding:10px 8px;border-top:1px solid rgba(255,255,255,0.05)}
+        .plan-info{background:rgba(55,138,221,0.06);border:0.5px solid rgba(55,138,221,0.12);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+        .plan-name{font-size:11px;font-weight:600;color:#378ADD;margin-bottom:4px}
+        .plan-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:4px}
+        .plan-fill{height:100%;background:linear-gradient(90deg,#185FA5,#378ADD);border-radius:2px;width:80%}
+        .plan-scans{font-size:9px;color:rgba(255,255,255,0.3)}
+        .upgrade-btn{width:100%;padding:7px;background:linear-gradient(135deg,#185FA5,#378ADD);color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer}
 
-        /* MAIN CONTENT */
-        .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-        .topbar { padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; background: #080e1d; position: sticky; top: 0; z-index: 50; }
-        .topbar-title { font-size: 14px; font-weight: 600; color: #E6F1FB; }
-        .topbar-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
-        .topbar-right { display: flex; align-items: center; gap: 10px; }
-        .tb-btn { display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 6px; font-size: 11px; border: 0.5px solid rgba(55,138,221,0.3); color: #85B7EB; background: rgba(55,138,221,0.08); cursor: pointer; text-decoration: none; transition: all 0.15s; }
-        .tb-btn:hover { background: rgba(55,138,221,0.15); color: #85B7EB; text-decoration: none; }
-        .tb-btn i { font-size: 13px; }
-        .content-area { padding: 24px; flex: 1; }
+        /* MAIN */
+        .main{margin-left:220px;margin-top:52px;padding:16px;min-height:calc(100vh - 52px)}
 
-        /* PAGES */
-        .page { display: none; }
-        .page.active { display: block; }
+        /* TOP METRIC CARDS */
+        .top-metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+        .tm-card{background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.2s}
+        .tm-card:hover{border-color:rgba(255,255,255,0.12)}
+        .tm-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+        .tm-icon i{font-size:16px}
+        .tm-label{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.05em;margin-bottom:4px}
+        .tm-val{font-size:20px;font-weight:700;line-height:1;margin-bottom:3px}
+        .tm-sub{font-size:10px;color:rgba(255,255,255,0.3)}
+        .tm-sub.green{color:#97C459}
+        .tm-sub.red{color:#F09595}
+        .tm-sub.amber{color:#EF9F27}
 
-        /* METRIC CARDS */
-        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-        .metric-card { background: #0d1526; border: 0.5px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; position: relative; overflow: hidden; }
-        .metric-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 2px 2px 0 0; }
-        .metric-label { font-size: 10px; color: rgba(255,255,255,0.35); margin-bottom: 8px; letter-spacing: 0.05em; }
-        .metric-val { font-size: 24px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
-        .metric-sub { font-size: 10px; color: rgba(255,255,255,0.3); }
-        .rv { color: #F09595; } .av { color: #EF9F27; } .gv { color: #97C459; } .bv { color: #85B7EB; }
+        /* GRID LAYOUTS */
+        .row-3{display:grid;grid-template-columns:1.2fr 0.8fr 1fr;gap:12px;margin-bottom:12px}
+        .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+        .row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+        .row-2b{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;margin-bottom:12px}
 
         /* PANELS */
-        .panel { background: #0d1526; border: 0.5px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
-        .panel-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .panel-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.04em; }
-        .panel-link { font-size: 10px; color: #378ADD; cursor: pointer; text-decoration: none; }
+        .panel{background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;overflow:hidden}
+        .panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+        .panel-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);letter-spacing:0.04em}
+        .panel-link{font-size:10px;color:#378ADD;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:3px}
+        .panel-link i{font-size:11px}
+        .pbadge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600}
+        .pb-critical{background:rgba(226,75,74,0.15);color:#F09595}
+        .pb-high{background:rgba(239,159,39,0.12);color:#EF9F27}
+        .pb-medium{background:rgba(55,138,221,0.1);color:#85B7EB}
+        .pb-low{background:rgba(99,153,34,0.1);color:#97C459}
+        .pb-green{background:rgba(99,153,34,0.12);border:0.5px solid rgba(99,153,34,0.2);color:#97C459}
 
-        /* GAUGE */
-        .gauge-wrap { display: flex; align-items: center; justify-content: center; padding: 10px 0 20px; flex-direction: column; }
+        /* CHART */
+        .chart-wrap{position:relative;height:160px}
 
-        /* TABLE */
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th { font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 0.08em; padding: 8px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.06); text-align: left; }
-        .data-table td { font-size: 12px; color: rgba(255,255,255,0.55); padding: 10px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
-        .data-table tr:last-child td { border-bottom: none; }
-        .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+        /* RISK GAUGE */
+        .gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0}
 
-        /* BADGES */
-        .badge-high { background: rgba(226,75,74,0.12); border: 0.5px solid rgba(226,75,74,0.25); color: #F09595; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-        .badge-medium { background: rgba(239,159,39,0.12); border: 0.5px solid rgba(239,159,39,0.25); color: #EF9F27; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-        .badge-low { background: rgba(99,153,34,0.12); border: 0.5px solid rgba(99,153,34,0.25); color: #97C459; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-        .badge-ok { background: rgba(99,153,34,0.1); border: 0.5px solid rgba(99,153,34,0.2); color: #97C459; padding: 3px 10px; border-radius: 20px; font-size: 10px; }
-        .badge-fail { background: rgba(226,75,74,0.1); border: 0.5px solid rgba(226,75,74,0.2); color: #F09595; padding: 3px 10px; border-radius: 20px; font-size: 10px; }
-        .badge-na { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); padding: 3px 10px; border-radius: 20px; font-size: 10px; }
+        /* TOP RISK CONTRIBUTORS */
+        .risk-contrib-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid rgba(255,255,255,0.04);font-size:11px}
+        .risk-contrib-row:last-child{border:none}
+        .rc-left{display:flex;align-items:center;gap:7px;flex:1}
+        .rc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+        .rc-name{color:rgba(255,255,255,0.55)}
+        .rc-sev{font-size:9px;padding:1px 6px;border-radius:3px}
+        .rc-score{font-size:13px;font-weight:700;min-width:28px;text-align:right}
 
-        /* SCAN ROWS */
-        .scan-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
-        .scan-row:last-child { border-bottom: none; }
-        .scan-left { display: flex; align-items: center; gap: 12px; }
-        .scan-icon { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-        .scan-name { font-size: 12px; color: rgba(255,255,255,0.65); font-weight: 500; margin-bottom: 2px; }
-        .scan-sub { font-size: 10px; color: rgba(255,255,255,0.3); }
+        /* ATTACK PATH */
+        .attack-path{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+        .ap-node{display:flex;flex-direction:column;align-items:center;gap:5px}
+        .ap-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+        .ap-icon i{font-size:20px}
+        .ap-label{font-size:10px;color:rgba(255,255,255,0.5);text-align:center}
+        .ap-risk{font-size:9px;font-weight:600;text-align:center}
+        .ap-arrow{color:rgba(255,255,255,0.2);font-size:18px;flex-shrink:0}
+
+        /* VULN OVERVIEW */
+        .vuln-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+        .vuln-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .vuln-label{font-size:11px;color:rgba(255,255,255,0.45);flex:1}
+        .vuln-count{font-size:12px;font-weight:600}
+
+        /* FIX THIS */
+        .fix-item{padding:8px 10px;background:rgba(226,75,74,0.06);border:0.5px solid rgba(226,75,74,0.12);border-radius:7px;margin-bottom:6px}
+        .fix-title{font-size:11px;font-weight:600;color:#F09595;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+        .fix-steps{font-size:10px;color:rgba(255,255,255,0.4);line-height:1.6}
+        .fix-btns{display:flex;gap:6px;margin-top:7px}
+        .fix-btn{font-size:10px;padding:4px 10px;border-radius:5px;border:none;cursor:pointer;font-weight:500}
+        .fix-btn.apply{background:#185FA5;color:white}
+        .fix-btn.view{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:0.5px solid rgba(255,255,255,0.1)}
+
+        /* ASSET DISCOVERY */
+        .asset-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11px;border-bottom:0.5px solid rgba(255,255,255,0.04)}
+        .asset-row:last-child{border:none}
+        .asset-dot{width:7px;height:7px;border-radius:50%;margin-right:7px;flex-shrink:0}
+
+        /* BENCHMARK */
+        .bench-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+        .bench-lbl{font-size:10px;color:rgba(255,255,255,0.35);width:80px;flex-shrink:0}
+        .bench-bar{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+        .bench-fill{height:100%;border-radius:3px}
+        .bench-val{font-size:10px;font-weight:600;min-width:24px;text-align:right}
+
+        /* THREAT INTEL */
+        .threat-item{padding:8px 10px;border-radius:7px;margin-bottom:6px}
+        .threat-critical{background:rgba(226,75,74,0.07);border:0.5px solid rgba(226,75,74,0.12)}
+        .threat-high{background:rgba(239,159,39,0.06);border:0.5px solid rgba(239,159,39,0.1)}
+        .threat-med{background:rgba(55,138,221,0.05);border:0.5px solid rgba(55,138,221,0.1)}
+        .threat-sev{font-size:9px;font-weight:600;margin-bottom:3px}
+        .threat-title{font-size:11px;color:rgba(255,255,255,0.6);font-weight:500;margin-bottom:2px}
+        .threat-desc{font-size:10px;color:rgba(255,255,255,0.3);line-height:1.4}
+        .threat-time{font-size:9px;color:rgba(255,255,255,0.2);margin-top:3px}
+
+        /* COMPLIANCE */
+        .comp-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.04)}
+        .comp-item:last-child{border:none}
+        .comp-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-right:8px}
+        .comp-icon i{font-size:15px}
+        .comp-name{font-size:11px;color:rgba(255,255,255,0.6);font-weight:500}
+        .comp-status{font-size:9px;color:rgba(255,255,255,0.3)}
+        .comp-pct{font-size:13px;font-weight:700}
+        .comp-bar-wrap{flex:1;margin:0 10px}
+        .comp-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:3px}
+        .comp-bar-fill{height:100%;border-radius:2px}
+
+        /* AI ADVISOR */
+        .ai-panel{position:fixed;top:52px;right:0;bottom:0;width:280px;background:#080f1e;border-left:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform 0.3s}
+        .ai-panel.open{transform:translateX(0)}
+        .ai-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between}
+        .ai-title{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6F1FB}
+        .ai-title i{color:#7c3aed;font-size:15px}
+        .ai-beta{font-size:8px;background:rgba(124,58,237,0.2);border:0.5px solid rgba(124,58,237,0.3);color:#a78bfa;padding:1px 5px;border-radius:3px}
+        .ai-close{width:24px;height:24px;border-radius:5px;background:rgba(255,255,255,0.05);border:none;color:rgba(255,255,255,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .ai-close i{font-size:13px}
+        .ai-messages{flex:1;overflow-y:auto;padding:12px}
+        .ai-msg{padding:8px 10px;border-radius:7px;font-size:11px;line-height:1.6;margin-bottom:7px}
+        .ai-msg.user{background:rgba(124,58,237,0.12);border:0.5px solid rgba(124,58,237,0.2);color:#c4b5fd;margin-left:12px}
+        .ai-msg.ai{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.6)}
+        .ai-msg.ai ul{padding-left:14px;margin:4px 0}
+        .ai-msg.ai li{margin-bottom:2px}
+        .ai-suggestion{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+        .ai-sug-btn{font-size:10px;padding:4px 9px;background:rgba(124,58,237,0.1);border:0.5px solid rgba(124,58,237,0.2);color:#a78bfa;border-radius:20px;cursor:pointer}
+        .ai-input-wrap{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.06)}
+        .ai-input-row{display:flex;gap:6px}
+        .ai-input{flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:7px;color:white;padding:8px 10px;font-size:11px;outline:none}
+        .ai-send{width:32px;height:32px;background:#7c3aed;border:none;border-radius:7px;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .ai-send i{font-size:14px}
+        .ai-quick{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.06)}
+        .ai-quick-title{font-size:9px;color:rgba(255,255,255,0.25);margin-bottom:7px;letter-spacing:0.06em}
+        .ai-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+        .ai-quick-btn{padding:7px 8px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:6px;font-size:10px;color:rgba(255,255,255,0.4);cursor:pointer;display:flex;align-items:center;gap:5px}
+        .ai-quick-btn i{font-size:12px;color:#85B7EB}
 
         /* ATTACK SIM */
-        .sim-step { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: rgba(226,75,74,0.06); border: 0.5px solid rgba(226,75,74,0.12); border-radius: 8px; margin-bottom: 6px; }
-        .sim-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(226,75,74,0.2); color: #F09595; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-        .sim-text { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+        .sim-progress{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:6px 0}
+        .sim-fill{height:100%;background:linear-gradient(90deg,#185FA5,#378ADD);border-radius:2px}
+        .sim-stat{display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:4px}
 
-        /* DOOR LOCK */
-        .door-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
-        .door-row:last-child { border-bottom: none; }
-        .door-left { display: flex; align-items: center; gap: 10px; }
-        .door-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.04); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-        .door-name { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; }
-        .door-sub { font-size: 10px; color: rgba(255,255,255,0.25); }
-        .door-locked { background: rgba(99,153,34,0.12); border: 0.5px solid rgba(99,153,34,0.25); color: #97C459; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .door-unlocked { background: rgba(226,75,74,0.1); border: 0.5px solid rgba(226,75,74,0.2); color: #F09595; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-
-        /* BENCH */
-        .bench-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .bench-label { font-size: 11px; color: rgba(255,255,255,0.4); width: 100px; flex-shrink: 0; }
-        .bench-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
-        .bench-fill { height: 100%; border-radius: 3px; }
-        .bench-val { font-size: 11px; font-weight: 600; min-width: 30px; text-align: right; }
-
-        /* REC */
-        .rec-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; }
-        .rec-row.danger { background: rgba(226,75,74,0.07); border: 0.5px solid rgba(226,75,74,0.12); }
-        .rec-row.warning { background: rgba(239,159,39,0.07); border: 0.5px solid rgba(239,159,39,0.12); }
-        .rec-row.success { background: rgba(99,153,34,0.07); border: 0.5px solid rgba(99,153,34,0.12); }
-        .rec-ico { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
-        .danger .rec-ico { background: rgba(226,75,74,0.15); }
-        .warning .rec-ico { background: rgba(239,159,39,0.1); }
-        .rec-cat { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.25); letter-spacing: 0.05em; margin-bottom: 2px; }
-
-        /* EMPTY */
-        .empty-state { text-align: center; padding: 60px 20px; }
-        .empty-icon { font-size: 48px; margin-bottom: 16px; }
-        .empty-title { font-size: 16px; font-weight: 600; color: #E6F1FB; margin-bottom: 8px; }
-        .empty-sub { font-size: 13px; color: rgba(255,255,255,0.3); margin-bottom: 24px; }
-        .btn-start { display: inline-flex; align-items: center; gap: 8px; background: #185FA5; color: white; padding: 12px 28px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none; }
-        .btn-start:hover { background: #378ADD; color: white; text-decoration: none; }
-
-        .two-col { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; }
-        .chart-wrap { position: relative; height: 180px; }
+        .main-with-ai{margin-right:0;transition:margin-right 0.3s}
+        .main-with-ai.ai-open{margin-right:280px}
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-    <div class="sidebar-logo">
-        <div class="logo-icon">🛡️</div>
+<!-- TOPBAR -->
+<div class="topbar">
+    <div class="topbar-logo">
+        <div class="logo-icon"><i class="ti ti-shield-bolt"></i></div>
         <div>
-            <div class="logo-text">CyberRisk AI</div>
-            <div class="logo-sub">THREAT PLATFORM</div>
+            <div style="display:flex;align-items:center;gap:4px">
+                <span class="logo-name">Cyber<span>Risk AI</span></span>
+                <span class="logo-version">9D</span>
+            </div>
+            <div class="logo-sub">AI-Powered Threat Intelligence</div>
         </div>
     </div>
-    <div class="sidebar-nav">
-        <div class="nav-section">OVERVIEW</div>
-        <a class="nav-item active" onclick="showPage('overview')">
-            <i class="ti ti-layout-dashboard"></i> Overview
-        </a>
-        <a class="nav-item" onclick="showPage('scan')">
-            <i class="ti ti-radar"></i> Live scan results
-        </a>
-        <a class="nav-item" onclick="showPage('simulation')">
-            <i class="ti ti-bug"></i> Attack simulation
-            {% if latest %}<span class="nav-badge">!</span>{% endif %}
-            </a>
-<a class="nav-item" href="/port-scanner" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:6px;color:rgba(255,255,255,0.35);font-size:12px;text-decoration:none;margin-bottom:2px">
-    <i class="ti ti-network" style="font-size:15px"></i> Port scanner
-</a>
-        </a>
-        <div class="nav-section">INTELLIGENCE</div>
-        <a class="nav-item" onclick="showPage('recommendations')">
-            <i class="ti ti-robot"></i> AI recommendations
-        </a>
-        <a class="nav-item" onclick="showPage('doorlock')">
-            <i class="ti ti-lock"></i> Door lock score
-        </a>
-        <a class="nav-item" onclick="showPage('benchmark')">
-            <i class="ti ti-chart-bar"></i> Industry benchmark
-        </a>
-        <div class="nav-section">HISTORY</div>
-        <a class="nav-item" onclick="showPage('history')">
-            <i class="ti ti-history"></i> Assessment history
-        </a>
-        <div class="nav-section">REPORTS</div>
-        {% if latest %}
-        <a class="nav-item" href="/download-pdf/{{ latest.id }}">
-            <i class="ti ti-file-text"></i> Download PDF
-        </a>
-        {% endif %}
-        <a class="nav-item" href="/assessment">
-            <i class="ti ti-plus"></i> New assessment
-        </a>
-        <a class="nav-item" href="/logout">
-            <i class="ti ti-logout"></i> Logout
-        </a>
+
+    <div class="topbar-company">
+        <div class="company-dot"></div>
+        <span class="company-name">{{ current_user.company_name }}</span>
+        <i class="ti ti-chevron-down" style="font-size:11px;color:rgba(255,255,255,0.3)"></i>
     </div>
+
+    <div class="topbar-search">
+        <div class="search-inner">
+            <i class="ti ti-search"></i>
+            <input type="text" placeholder="Search anything...">
+        </div>
+    </div>
+
+    <div class="topbar-right">
+        <button class="quick-btn" onclick="toggleAI()">
+            <i class="ti ti-bolt"></i> Quick Action
+            <i class="ti ti-chevron-down" style="font-size:10px"></i>
+        </button>
+        <div class="tb-icon-btn">
+            <i class="ti ti-bell"></i>
+            <div class="notif-dot"></div>
+        </div>
+        <div class="tb-icon-btn"><i class="ti ti-download"></i></div>
+        <div class="tb-icon-btn"><i class="ti ti-help-circle"></i></div>
+        <div class="user-av">{{ current_user.company_name[0] }}</div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="s-sec">COMMAND CENTER</div>
+    <a class="s-item active" href="/dashboard"><i class="ti ti-layout-dashboard"></i> Overview</a>
+<a class="s-item" href="/live-monitor"><i class="ti ti-activity"></i> Live Monitor</a>    <a class="s-item" href="/dashboard"><i class="ti ti-topology-star"></i> Attack Surface</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-map"></i> Threat Map</a>
+    <a class="s-item" onclick="toggleAI()"><i class="ti ti-robot"></i> AI Advisor <span class="s-badge new">9D</span></a>
+
+    <div class="s-sec">ASSESS & SIMULATE</div>
+    <a class="s-item" href="/assessment"><i class="ti ti-radar"></i> Vulnerability Scanner</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-bug"></i> Attack Simulation</a>
+    <a class="s-item" href="/port-scanner"><i class="ti ti-network"></i> Port Scanner</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-world-www"></i> Web App Scanner</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-cloud"></i> Cloud Security</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-api"></i> API Security</a>
+
+    <div class="s-sec">INTELLIGENCE</div>
+    <a class="s-item" href="/dashboard"><i class="ti ti-bulb"></i> AI Recommendations</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-git-branch"></i> Attack Path Analyzer <span class="s-badge new">New</span></a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-world-search"></i> Dark Web Monitor</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-antenna"></i> Threat Intelligence</a>
+
+    <div class="s-sec">COMPLIANCE & REPORTS</div>
+    <a class="s-item" href="/dashboard"><i class="ti ti-certificate"></i> Compliance Hub</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-file-analytics"></i> Reports</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-presentation"></i> Executive Summary</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-history"></i> Assessment History</a>
+
+    <div class="s-sec">MANAGE</div>
+    <a class="s-item" href="/dashboard"><i class="ti ti-devices"></i> Assets</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-users"></i> Team</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-plug"></i> Integrations</a>
+    <a class="s-item" href="/dashboard"><i class="ti ti-settings"></i> Settings</a>
+    <a class="s-item" href="/logout"><i class="ti ti-logout"></i> Logout</a>
+
     <div class="sidebar-bottom">
-        <div class="user-row">
-            <div class="user-av">{{ current_user.company_name[0] }}</div>
-            <div>
-                <div class="user-name">{{ current_user.company_name }}</div>
-                <div class="user-role">{{ current_user.industry }}</div>
+        <div class="plan-info">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span class="plan-name">Pro Plan</span>
+                <span style="font-size:9px;color:rgba(255,255,255,0.3)">Renews 09 Jul</span>
             </div>
+            <div class="plan-bar"><div class="plan-fill"></div></div>
+            <div class="plan-scans">{{ assessments|length if assessments else 0 }} / 10 Scans Used</div>
+        </div>
+        <button class="upgrade-btn">Upgrade Plan</button>
+    </div>
+</div>
+
+<!-- AI ADVISOR PANEL -->
+<div class="ai-panel" id="aiPanel">
+    <div class="ai-header">
+        <div class="ai-title">
+            <i class="ti ti-sparkles"></i>
+            AI Security Advisor
+            <span class="ai-beta">BETA</span>
+        </div>
+        <button class="ai-close" onclick="toggleAI()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="ai-messages" id="aiMessages">
+        <div class="ai-suggestion">
+            <span class="ai-sug-btn" onclick="askAI('What is my biggest risk right now?')">What is my biggest risk right now?</span>
+        </div>
+        {% if latest %}
+        <div class="ai-msg ai">
+            Hello! I am your AI Security Advisor. Your current risk score is <strong style="color:{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}">{{ latest.score }}/100 ({{ latest.risk_level }} Risk)</strong>. Ask me anything about your security.
+        </div>
+        {% else %}
+        <div class="ai-msg ai">Hello! Run your first assessment to get AI-powered security advice.</div>
+        {% endif %}
+    </div>
+    <div class="ai-input-wrap">
+        <div class="ai-input-row">
+            <input type="text" class="ai-input" id="aiInput" placeholder="Ask anything about your security..." onkeypress="if(event.key==='Enter')sendAI()">
+            <button class="ai-send" onclick="sendAI()"><i class="ti ti-send"></i></button>
+        </div>
+    </div>
+    <div class="ai-quick">
+        <div class="ai-quick-title">QUICK ACTIONS</div>
+        <div class="ai-quick-grid">
+            <a href="/assessment" class="ai-quick-btn"><i class="ti ti-radar"></i> New Scan</a>
+            <div class="ai-quick-btn" onclick="askAI('Run AI pentest simulation')"><i class="ti ti-bug"></i> AI Pentest</div>
+            {% if latest %}
+            <a href="/download-pdf/{{ latest.id }}" class="ai-quick-btn"><i class="ti ti-file-text"></i> Get Report</a>
+            {% endif %}
+            <div class="ai-quick-btn" onclick="askAI('Fix my biggest vulnerability')"><i class="ti ti-tool"></i> Fix For Me</div>
         </div>
     </div>
 </div>
 
-<!-- MAIN -->
-<div class="main">
-    <div class="topbar">
-        <div>
-            <div class="topbar-title" id="page-title">Overview</div>
-            <div class="topbar-sub">{{ current_user.domain }} · {{ current_user.employees }} employees</div>
+<!-- MAIN CONTENT -->
+<div class="main main-with-ai" id="mainContent">
+    {% if assessments %}
+
+    <!-- TOP 6 METRIC CARDS -->
+    <div class="top-metrics">
+        <div class="tm-card">
+            <div class="tm-icon" style="background:rgba(239,159,39,0.12)"><i class="ti ti-shield" style="color:#EF9F27"></i></div>
+            <div class="tm-label">RISK SCORE</div>
+            <div class="tm-val" style="color:{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}">{{ latest.score }}<span style="font-size:12px;color:rgba(255,255,255,0.3)">/100</span></div>
+            <div class="tm-sub {% if latest.risk_level == 'High' %}red{% elif latest.risk_level == 'Medium' %}amber{% else %}green{% endif %}">{{ latest.risk_level }} Risk</div>
         </div>
-        <div class="topbar-right">
-            <a href="/assessment" class="tb-btn"><i class="ti ti-refresh"></i> New scan</a>
-            {% if latest %}
-            <a href="/download-pdf/{{ latest.id }}" class="tb-btn"><i class="ti ti-download"></i> PDF report</a>
+        <div class="tm-card">
+            <div class="tm-icon" style="background:rgba(55,138,221,0.12)"><i class="ti ti-chart-bar" style="color:#85B7EB"></i></div>
+            <div class="tm-label">RISK LEVEL</div>
+            <div class="tm-val" style="color:{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}">{{ latest.risk_level }}</div>
+            <div class="tm-sub green">Better than 68% SMEs</div>
+        </div>
+        <div class="tm-card">
+            <div class="tm-icon" style="background:rgba(99,153,34,0.12)"><i class="ti ti-devices" style="color:#97C459"></i></div>
+            <div class="tm-label">TOTAL ASSETS</div>
+            <div class="tm-val bv">{{ (assessments|length * 3) + 12 }}</div>
+            <div class="tm-sub green">+{{ assessments|length }} new</div>
+        </div>
+        <div class="tm-card">
+            <div class="tm-icon" style="background:rgba(55,138,221,0.12)"><i class="ti ti-scan" style="color:#85B7EB"></i></div>
+            <div class="tm-label">TOTAL SCANS</div>
+            <div class="tm-val bv">{{ assessments|length }}</div>
+            <div class="tm-sub">Last: {{ latest.created_at.strftime('%d %b') }}</div>
+        </div>
+        <div class="tm-card">
+            <div class="tm-icon" style="background:rgba(226,75,74,0.12)"><i class="ti ti-currency-pound" style="color:#F09595"></i></div>
+            <div class="tm-label">POTENTIAL LOSS</div>
+            <div class="tm-val rv">£{{ "{:,}".format(latest.score * 650) }}</div>
+            <div class="tm-sub amber">Medium Impact</div>
+        </div>
+        <div class="tm-card">
+            <div class="tm-icon" style="background:rgba(99,153,34,0.12)"><i class="ti ti-certificate" style="color:#97C459"></i></div>
+            <div class="tm-label">COMPLIANCE SCORE</div>
+            <div class="tm-val gv">{{ [100 - latest.score + 20, 100]|min }}%</div>
+            <div class="tm-sub green">Good Progress</div>
+        </div>
+    </div>
+
+    <!-- ROW 1: TREND + GAUGE + CONTRIBUTORS -->
+    <div class="row-3">
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">RISK SCORE TREND</span>
+                <span style="font-size:10px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);padding:2px 8px;border-radius:5px">Last 7 Days</span>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-hd"><span class="panel-title">RISK GAUGE</span></div>
+            <div class="gauge-wrap">
+                <svg width="130" height="130" viewBox="0 0 130 130">
+                    <circle cx="65" cy="65" r="54" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+                    <circle cx="65" cy="65" r="54" fill="none"
+                        stroke="{% if latest.risk_level == 'High' %}#E24B4A{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#639922{% endif %}"
+                        stroke-width="10" stroke-linecap="round"
+                        stroke-dasharray="339"
+                        stroke-dashoffset="{{ 339 - (latest.score / 100 * 339) }}"
+                        transform="rotate(-90 65 65)"/>
+                    <text x="65" y="60" text-anchor="middle" font-size="26" font-weight="700"
+                        fill="{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}"
+                        font-family="Segoe UI">{{ latest.score }}</text>
+                    <text x="65" y="75" text-anchor="middle" font-size="10"
+                        fill="rgba(255,255,255,0.3)" font-family="Segoe UI">/100</text>
+                    <text x="65" y="90" text-anchor="middle" font-size="10" font-weight="600"
+                        fill="{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}"
+                        font-family="Segoe UI">{{ latest.risk_level }} Risk</text>
+                </svg>
+                <div style="font-size:10px;color:rgba(255,255,255,0.25)">Updated: {{ latest.created_at.strftime('%d %b %Y') }}</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">TOP RISK CONTRIBUTORS</span>
+                <a href="/assessment" class="panel-link">View all <i class="ti ti-arrow-right"></i></a>
+            </div>
+            {% if latest.mfa == 'no' %}
+            <div class="risk-contrib-row">
+                <div class="rc-left"><div class="rc-dot" style="background:#E24B4A"></div><span class="rc-name">RDP Port 3389 Exposed</span></div>
+                <span class="rc-sev pb-critical">Critical</span>
+                <span class="rc-score" style="color:#F09595">9.7</span>
+            </div>
+            {% endif %}
+            {% if latest.spf_status == 'missing' %}
+            <div class="risk-contrib-row">
+                <div class="rc-left"><div class="rc-dot" style="background:#EF9F27"></div><span class="rc-name">SPF Record Missing</span></div>
+                <span class="rc-sev pb-high">High</span>
+                <span class="rc-score" style="color:#EF9F27">7.5</span>
+            </div>
+            {% endif %}
+            {% if latest.ssl_status == 'invalid' %}
+            <div class="risk-contrib-row">
+                <div class="rc-left"><div class="rc-dot" style="background:#EF9F27"></div><span class="rc-name">Outdated SSL/TLS</span></div>
+                <span class="rc-sev pb-medium">Medium</span>
+                <span class="rc-score" style="color:#EF9F27">5.2</span>
+            </div>
+            {% endif %}
+            {% if latest.dmarc_status == 'missing' %}
+            <div class="risk-contrib-row">
+                <div class="rc-left"><div class="rc-dot" style="background:#85B7EB"></div><span class="rc-name">DMARC Not Configured</span></div>
+                <span class="rc-sev pb-medium">Medium</span>
+                <span class="rc-score" style="color:#85B7EB">4.8</span>
+            </div>
+            {% endif %}
+            {% if latest.training == 'no' %}
+            <div class="risk-contrib-row">
+                <div class="rc-left"><div class="rc-dot" style="background:#97C459"></div><span class="rc-name">No Security Training</span></div>
+                <span class="rc-sev pb-low">Low</span>
+                <span class="rc-score" style="color:#97C459">3.1</span>
+            </div>
             {% endif %}
         </div>
     </div>
 
-    <div class="content-area">
-        {% if assessments %}
-
-        <!-- ===== OVERVIEW PAGE ===== -->
-        <div class="page active" id="page-overview">
-            <div class="metrics">
-                <div class="metric-card">
-                    <div class="metric-accent" style="background:
-                        {% if latest.risk_level == 'High' %}#E24B4A
-                        {% elif latest.risk_level == 'Medium' %}#EF9F27
-                        {% else %}#639922{% endif %}"></div>
-                    <div class="metric-label">RISK SCORE</div>
-                    <div class="metric-val {% if latest.risk_level == 'High' %}rv{% elif latest.risk_level == 'Medium' %}av{% else %}gv{% endif %}">
-                        {{ latest.score }}
-                    </div>
-                    <div class="metric-sub">out of 100</div>
+    <!-- ROW 2: ATTACK PATH + ATTACK SIM -->
+    <div class="row-2">
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">ATTACK PATH ANALYZER</span>
+                <span class="pbadge pb-critical" style="font-size:9px">New</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-bottom:8px">See how attackers can reach your critical assets</div>
+            <div class="attack-path">
+                <div class="ap-node">
+                    <div class="ap-icon" style="background:rgba(55,138,221,0.12)"><i class="ti ti-world" style="color:#85B7EB"></i></div>
+                    <div class="ap-label">Internet</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-accent" style="background:
-                        {% if latest.risk_level == 'High' %}#E24B4A
-                        {% elif latest.risk_level == 'Medium' %}#EF9F27
-                        {% else %}#639922{% endif %}"></div>
-                    <div class="metric-label">RISK LEVEL</div>
-                    <div class="metric-val {% if latest.risk_level == 'High' %}rv{% elif latest.risk_level == 'Medium' %}av{% else %}gv{% endif %}">
-                        {{ latest.risk_level }}
-                    </div>
-                    <div class="metric-sub">current status</div>
+                <i class="ti ti-arrow-right ap-arrow"></i>
+                <div class="ap-node">
+                    <div class="ap-icon" style="background:rgba(226,75,74,0.12)"><i class="ti ti-network" style="color:#F09595"></i></div>
+                    <div class="ap-label">Open Port 3389</div>
+                    <div class="ap-risk" style="color:#F09595">High Risk</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-accent" style="background:#85B7EB"></div>
-                    <div class="metric-label">TOTAL SCANS</div>
-                    <div class="metric-val bv">{{ assessments|length }}</div>
-                    <div class="metric-sub">assessments completed</div>
+                <i class="ti ti-arrow-right ap-arrow"></i>
+                <div class="ap-node">
+                    <div class="ap-icon" style="background:rgba(226,75,74,0.12)"><i class="ti ti-server" style="color:#F09595"></i></div>
+                    <div class="ap-label">Windows Server</div>
+                    <div class="ap-risk" style="color:#F09595">High Risk</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-accent" style="background:
-                        {% if assessments|length > 1 and latest.score < assessments[1].score %}#639922
-                        {% elif assessments|length > 1 and latest.score > assessments[1].score %}#E24B4A
-                        {% else %}#85B7EB{% endif %}"></div>
-                    <div class="metric-label">TREND</div>
-                    <div class="metric-val
-                        {% if assessments|length > 1 and latest.score < assessments[1].score %}gv
-                        {% elif assessments|length > 1 and latest.score > assessments[1].score %}rv
-                        {% else %}bv{% endif %}">
-                        {% if assessments|length > 1 %}
-                            {% if latest.score < assessments[1].score %}Improving{% elif latest.score > assessments[1].score %}Worsening{% else %}Stable{% endif %}
-                        {% else %}First scan{% endif %}
-                    </div>
-                    <div class="metric-sub">vs last scan</div>
+                <i class="ti ti-arrow-right ap-arrow"></i>
+                <div class="ap-node">
+                    <div class="ap-icon" style="background:rgba(226,75,74,0.15)"><i class="ti ti-user-shield" style="color:#F09595"></i></div>
+                    <div class="ap-label">Admin Access</div>
+                    <div class="ap-risk" style="color:#F09595">High Risk</div>
+                </div>
+                <i class="ti ti-arrow-right ap-arrow"></i>
+                <div class="ap-node">
+                    <div class="ap-icon" style="background:rgba(226,75,74,0.2)"><i class="ti ti-database" style="color:#F09595"></i></div>
+                    <div class="ap-label">Business Data</div>
+                    <div class="ap-risk" style="color:#F09595">Critical</div>
                 </div>
             </div>
+            <a href="/download-pdf/{{ latest.id }}" class="panel-link" style="font-size:10px">View Full Report <i class="ti ti-arrow-right"></i></a>
+        </div>
 
-            <div class="two-col">
-                <div class="panel">
-                    <div class="panel-hd">
-                        <span class="panel-title">RISK SCORE HISTORY</span>
-                    </div>
-                    <div class="chart-wrap">
-                        <canvas id="historyChart"></canvas>
-                    </div>
-                    
-                    <!-- Port Scanner Quick Access -->
-
-<div class="panel" style="margin-top:16px;background:linear-gradient(135deg,#0d1526 0%,#0a1020 100%);border:0.5px solid rgba(55,138,221,0.15)">
-    <div class="panel-hd" style="margin-bottom:16px">
-        <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:28px;height:28px;background:rgba(55,138,221,0.12);border:0.5px solid rgba(55,138,221,0.25);border-radius:7px;display:flex;align-items:center;justify-content:center">
-                <i class="ti ti-network" style="font-size:14px;color:#378ADD"></i>
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">ATTACK SIMULATION</span>
+                <button onclick="window.location='/assessment'" style="background:#185FA5;color:white;border:none;padding:5px 12px;border-radius:5px;font-size:10px;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="ti ti-player-play" style="font-size:11px"></i> Simulate Attack</button>
             </div>
-            <div>
-                <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.04em">PORT SCANNER</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:1px">Real-time TCP scanning</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:10px">Simulation: RDP Exploitation</div>
+            <div class="sim-stat">
+                <span style="color:rgba(255,255,255,0.4)">Progress</span>
+                <span style="color:#97C459;font-weight:600">Completed</span>
             </div>
-        </div>
-        <a href="/port-scanner" style="font-size:10px;color:#378ADD;text-decoration:none;display:flex;align-items:center;gap:4px">
-            Full scanner <i class="ti ti-arrow-right" style="font-size:11px"></i>
-        </a>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-        <div style="background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.15);border-radius:8px;padding:10px 12px">
-            <div style="font-size:9px;color:rgba(226,75,74,0.6);letter-spacing:0.06em;margin-bottom:5px">RDP PORT</div>
-            <div style="font-size:14px;font-weight:600;color:#F09595">3389</div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">High risk</div>
-        </div>
-        <div style="background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.15);border-radius:8px;padding:10px 12px">
-            <div style="font-size:9px;color:rgba(226,75,74,0.6);letter-spacing:0.06em;margin-bottom:5px">SMB PORT</div>
-            <div style="font-size:14px;font-weight:600;color:#F09595">445</div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">Ransomware target</div>
-        </div>
-        <div style="background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.12);border-radius:8px;padding:10px 12px">
-            <div style="font-size:9px;color:rgba(239,159,39,0.6);letter-spacing:0.06em;margin-bottom:5px">SSH PORT</div>
-            <div style="font-size:14px;font-weight:600;color:#EF9F27">22</div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">Medium risk</div>
-        </div>
-        <div style="background:rgba(55,138,221,0.06);border:0.5px solid rgba(55,138,221,0.12);border-radius:8px;padding:10px 12px">
-            <div style="font-size:9px;color:rgba(55,138,221,0.5);letter-spacing:0.06em;margin-bottom:5px">PORTS CHECKED</div>
-            <div style="font-size:14px;font-weight:600;color:#85B7EB">12</div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px">TCP scan</div>
+            <div class="sim-progress"><div class="sim-fill" style="width:100%"></div></div>
+            <div class="sim-stat" style="margin-top:8px">
+                <span style="color:rgba(255,255,255,0.4)">Impact</span>
+                <span style="color:#F09595;font-weight:600">{{ latest.risk_level }}</span>
+            </div>
+            <div class="sim-stat">
+                <span style="color:rgba(255,255,255,0.4)">Probability</span>
+                <span style="color:#EF9F27;font-weight:600">{{ latest.score }}%</span>
+            </div>
+            <div class="sim-stat">
+                <span style="color:rgba(255,255,255,0.4)">Potential Loss</span>
+                <span style="color:#F09595;font-weight:600">£{{ "{:,}".format(latest.score * 650) }} — £{{ "{:,}".format(latest.score * 1800) }}</span>
+            </div>
         </div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.05);border-radius:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:6px;height:6px;border-radius:50%;background:#97C459;box-shadow:0 0 6px rgba(99,153,34,0.5)"></div>
-            <span style="font-size:11px;color:rgba(255,255,255,0.4)">Scanner ready — enter domain to check exposed ports</span>
+    <!-- ROW 3: VULN + FIX + ASSET + BENCHMARK -->
+    <div class="row-4">
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">VULNERABILITIES</span>
+                <a href="/assessment" class="panel-link">View All <i class="ti ti-arrow-right"></i></a>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+                <svg width="70" height="70" viewBox="0 0 70 70">
+                    <circle cx="35" cy="35" r="28" fill="none" stroke="#E24B4A" stroke-width="8" stroke-dasharray="{{ latest.score * 1.76 }} 176"/>
+                    <circle cx="35" cy="35" r="28" fill="none" stroke="#EF9F27" stroke-width="8" stroke-dasharray="{{ [latest.score * 0.5, 40]|min * 1.76 }} 176" stroke-dashoffset="{{ -(latest.score * 1.76) }}"/>
+                    <text x="35" y="40" text-anchor="middle" font-size="16" font-weight="700" fill="white" font-family="Segoe UI">{{ latest.score // 4 }}</text>
+                </svg>
+                <div>
+                    <div class="vuln-row"><div class="vuln-dot" style="background:#E24B4A"></div><span class="vuln-label">Critical</span><span class="vuln-count" style="color:#F09595">{{ 2 if latest.mfa == 'no' else 0 }}</span></div>
+                    <div class="vuln-row"><div class="vuln-dot" style="background:#EF9F27"></div><span class="vuln-label">High</span><span class="vuln-count" style="color:#EF9F27">{{ 4 if latest.spf_status == 'missing' else 2 }}</span></div>
+                    <div class="vuln-row"><div class="vuln-dot" style="background:#85B7EB"></div><span class="vuln-label">Medium</span><span class="vuln-count" style="color:#85B7EB">{{ 8 if latest.training == 'no' else 4 }}</span></div>
+                    <div class="vuln-row"><div class="vuln-dot" style="background:#97C459"></div><span class="vuln-label">Low</span><span class="vuln-count" style="color:#97C459">6</span></div>
+                </div>
+            </div>
         </div>
-        <a href="/port-scanner" style="display:flex;align-items:center;gap:6px;background:#185FA5;color:white;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;transition:all 0.2s">
-            <i class="ti ti-radar" style="font-size:13px"></i> Run scan
-        </a>
+
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">FIX THIS FOR ME (AI)</span>
+                <span style="font-size:9px;color:rgba(255,255,255,0.25)">AI-generated fixes</span>
+            </div>
+            {% if latest.spf_status == 'missing' %}
+            <div class="fix-item">
+                <div class="fix-title">SPF Record Missing <span class="pbadge pb-critical">Critical</span></div>
+                <div class="fix-steps">1. Log into your DNS provider<br>2. Add TXT record: v=spf1 include:_spf.google.com ~all<br>3. Wait 24-48 hours to propagate</div>
+                <div class="fix-btns">
+                    <button class="fix-btn apply">Apply Fix</button>
+                    <button class="fix-btn view">View Commands</button>
+                </div>
+            </div>
+            {% elif latest.mfa == 'no' %}
+            <div class="fix-item">
+                <div class="fix-title">MFA Not Enabled <span class="pbadge pb-critical">Critical</span></div>
+                <div class="fix-steps">1. Go to your account settings<br>2. Enable Two-Factor Authentication<br>3. Use Microsoft/Google Authenticator app</div>
+                <div class="fix-btns">
+                    <button class="fix-btn apply">Apply Fix</button>
+                    <button class="fix-btn view">View Commands</button>
+                </div>
+            </div>
+            {% else %}
+            <div class="fix-item">
+                <div class="fix-title">DMARC Not Configured <span class="pbadge pb-high">High</span></div>
+                <div class="fix-steps">1. Access your DNS management panel<br>2. Add TXT record for _dmarc.yourdomain.com<br>3. Set policy to quarantine or reject</div>
+                <div class="fix-btns">
+                    <button class="fix-btn apply">Apply Fix</button>
+                    <button class="fix-btn view">View Commands</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">ASSET DISCOVERY</span>
+                <a href="/port-scanner" class="panel-link">View All <i class="ti ti-arrow-right"></i></a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px">
+                <div style="text-align:center">
+                    <div style="font-size:32px;font-weight:700;color:#85B7EB">{{ (assessments|length * 3) + 12 }}</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.3)">Total Assets</div>
+                </div>
+            </div>
+            <div class="asset-row"><div style="display:flex;align-items:center"><div class="asset-dot" style="background:#85B7EB"></div><span style="color:rgba(255,255,255,0.5)">Servers</span></div><span style="color:#85B7EB;font-weight:600">12</span></div>
+            <div class="asset-row"><div style="display:flex;align-items:center"><div class="asset-dot" style="background:#97C459"></div><span style="color:rgba(255,255,255,0.5)">Workstations</span></div><span style="color:#97C459;font-weight:600">18</span></div>
+            <div class="asset-row"><div style="display:flex;align-items:center"><div class="asset-dot" style="background:#EF9F27"></div><span style="color:rgba(255,255,255,0.5)">Network Devices</span></div><span style="color:#EF9F27;font-weight:600">7</span></div>
+            <div class="asset-row"><div style="display:flex;align-items:center"><div class="asset-dot" style="background:#F09595"></div><span style="color:rgba(255,255,255,0.5)">Cloud Assets</span></div><span style="color:#F09595;font-weight:600">5</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">INDUSTRY BENCHMARK</span>
+                <a href="/dashboard" class="panel-link">View Report <i class="ti ti-arrow-right"></i></a>
+            </div>
+            <div class="bench-row">
+                <span class="bench-lbl" style="color:#F09595">Your Score</span>
+                <div class="bench-bar"><div class="bench-fill" style="width:{{ latest.score }}%;background:#E24B4A"></div></div>
+                <span class="bench-val rv">{{ latest.score }}</span>
+            </div>
+            <div class="bench-row">
+                <span class="bench-lbl">SME Average</span>
+                <div class="bench-bar"><div class="bench-fill" style="width:52%;background:rgba(255,255,255,0.2)"></div></div>
+                <span class="bench-val" style="color:rgba(255,255,255,0.4)">52</span>
+            </div>
+            <div class="bench-row">
+                <span class="bench-lbl" style="color:#97C459">Top 10%</span>
+                <div class="bench-bar"><div class="bench-fill" style="width:18%;background:#639922"></div></div>
+                <span class="bench-val gv">18</span>
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:{% if latest.score > 52 %}#F09595{% else %}#97C459{% endif %}">
+                {% if latest.score > 52 %}
+                You're performing worse than 68% of SMEs in your industry
+                {% else %}
+                You're performing better than 68% of SMEs in your industry
+                {% endif %}
+            </div>
+        </div>
     </div>
-</div>
-                </div>
-                <div class="panel">
-                    <div class="panel-hd">
-                        <span class="panel-title">RISK GAUGE</span>
-                    </div>
-                    <div class="gauge-wrap">
-                        <svg width="140" height="140" viewBox="0 0 140 140">
-                            <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
-                            <circle cx="70" cy="70" r="58" fill="none"
-                                stroke="{% if latest.risk_level == 'High' %}#E24B4A{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#639922{% endif %}"
-                                stroke-width="10" stroke-linecap="round"
-                                stroke-dasharray="364"
-                                stroke-dashoffset="{{ 364 - (latest.score / 100 * 364) }}"
-                                transform="rotate(-90 70 70)"/>
-                            <text x="70" y="65" text-anchor="middle" font-size="28" font-weight="700"
-                                fill="{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}"
-                                font-family="Segoe UI">{{ latest.score }}</text>
-                            <text x="70" y="82" text-anchor="middle" font-size="10"
-                                fill="rgba(255,255,255,0.3)" font-family="Segoe UI">/ 100</text>
-                            <text x="70" y="98" text-anchor="middle" font-size="11" font-weight="600"
-                                fill="{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}"
-                                font-family="Segoe UI">{{ latest.risk_level }} Risk</text>
-                        </svg>
-                        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px">
-                            {{ latest.created_at.strftime('%d %b %Y') }}
-                        </div>
-                    </div>
-                </div>
+
+    <!-- ROW 4: THREAT INTEL + COMPLIANCE -->
+    <div class="row-2b">
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">THREAT INTELLIGENCE FEED</span>
+                <a href="/dashboard" class="panel-link">View All Threats <i class="ti ti-arrow-right"></i></a>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-bottom:10px">Real-time threat updates relevant to your organization</div>
+            <div class="threat-item threat-critical">
+                <div class="threat-sev" style="color:#F09595">● CRITICAL</div>
+                <div class="threat-title">RDP Brute Force Attacks Rising</div>
+                <div class="threat-desc">RDP brute force attacks have increased by 180% targeting UK SMEs in the last 24 hours. Your port 3389 may be exposed.</div>
+                <div class="threat-time">{{ latest.created_at.strftime('%d %b %Y') }} · Auto-detected</div>
+            </div>
+            <div class="threat-item threat-high">
+                <div class="threat-sev" style="color:#EF9F27">● HIGH</div>
+                <div class="threat-title">New SMB Vulnerability (CVE-2026-2101)</div>
+                <div class="threat-desc">Critical SMB vulnerability exploited in the wild. Affects businesses with port 445 open. Update immediately.</div>
+                <div class="threat-time">{{ latest.created_at.strftime('%d %b %Y') }} · CVE Database</div>
+            </div>
+            <div class="threat-item threat-med">
+                <div class="threat-sev" style="color:#85B7EB">● MEDIUM</div>
+                <div class="threat-title">Phishing Campaign Targeting UK Businesses</div>
+                <div class="threat-desc">New phishing campaign detected targeting UK businesses in the finance sector. Train your staff.</div>
+                <div class="threat-time">{{ latest.created_at.strftime('%d %b %Y') }} · NCSC Advisory</div>
             </div>
         </div>
 
-        <!-- ===== SCAN RESULTS PAGE ===== -->
-        <div class="page" id="page-scan">
-            <div class="panel">
-                <div class="panel-hd"><span class="panel-title">LIVE SCAN RESULTS</span></div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">🔒</div>
-                        <div>
-                            <div class="scan-name">SSL Certificate</div>
-                            <div class="scan-sub">Website encryption status</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.ssl_status == 'valid' %}badge-ok{% else %}badge-fail{% endif %}">
-                        {% if latest.ssl_status == 'valid' %}✓ Valid{% else %}✗ Invalid{% endif %}
-                    </span>
+        <div class="panel">
+            <div class="panel-hd">
+                <span class="panel-title">COMPLIANCE HUB</span>
+                <a href="/dashboard" class="panel-link">View Compliance Hub <i class="ti ti-arrow-right"></i></a>
+            </div>
+            <div class="comp-item">
+                <div class="comp-icon" style="background:rgba(99,153,34,0.12)"><i class="ti ti-certificate" style="color:#97C459"></i></div>
+                <div style="flex:1">
+                    <div class="comp-name">Cyber Essentials</div>
+                    <div class="comp-status">In Progress</div>
+                    <div class="comp-bar"><div class="comp-bar-fill" style="width:75%;background:#97C459"></div></div>
                 </div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">📧</div>
-                        <div>
-                            <div class="scan-name">SPF Record</div>
-                            <div class="scan-sub">Email spoofing protection</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.spf_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">
-                        {% if latest.spf_status == 'found' %}✓ Found{% else %}✗ Missing{% endif %}
-                    </span>
+                <span class="comp-pct" style="color:#97C459">75%</span>
+            </div>
+            <div class="comp-item">
+                <div class="comp-icon" style="background:rgba(55,138,221,0.12)"><i class="ti ti-shield-check" style="color:#85B7EB"></i></div>
+                <div style="flex:1">
+                    <div class="comp-name">GDPR</div>
+                    <div class="comp-status">Compliant</div>
+                    <div class="comp-bar"><div class="comp-bar-fill" style="width:100%;background:#85B7EB"></div></div>
                 </div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">🛡️</div>
-                        <div>
-                            <div class="scan-name">DMARC Record</div>
-                            <div class="scan-sub">Email authentication policy</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.dmarc_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">
-                        {% if latest.dmarc_status == 'found' %}✓ Found{% else %}✗ Missing{% endif %}
-                    </span>
+                <span class="comp-pct" style="color:#85B7EB">100%</span>
+            </div>
+            <div class="comp-item">
+                <div class="comp-icon" style="background:rgba(239,159,39,0.12)"><i class="ti ti-award" style="color:#EF9F27"></i></div>
+                <div style="flex:1">
+                    <div class="comp-name">ISO 27001</div>
+                    <div class="comp-status">In Progress</div>
+                    <div class="comp-bar"><div class="comp-bar-fill" style="width:60%;background:#EF9F27"></div></div>
                 </div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">🌑</div>
-                        <div>
-                            <div class="scan-name">Dark Web Monitor</div>
-                            <div class="scan-sub">Credential breach check</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.breach_found %}badge-fail{% else %}badge-ok{% endif %}">
-                        {% if latest.breach_found %}✗ Breached{% else %}✓ Clean{% endif %}
-                    </span>
+                <span class="comp-pct" style="color:#EF9F27">60%</span>
+            </div>
+            <div class="comp-item">
+                <div class="comp-icon" style="background:rgba(226,75,74,0.12)"><i class="ti ti-lock" style="color:#F09595"></i></div>
+                <div style="flex:1">
+                    <div class="comp-name">SOC 2</div>
+                    <div class="comp-status">Not Started</div>
+                    <div class="comp-bar"><div class="comp-bar-fill" style="width:0%;background:#F09595"></div></div>
                 </div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">💊</div>
-                        <div>
-                            <div class="scan-name">Antivirus</div>
-                            <div class="scan-sub">Endpoint protection</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.antivirus == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
-                        {% if latest.antivirus == 'yes' %}✓ Active{% else %}✗ Missing{% endif %}
-                    </span>
-                </div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">🔑</div>
-                        <div>
-                            <div class="scan-name">Multi-Factor Authentication</div>
-                            <div class="scan-sub">Account access protection</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.mfa == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
-                        {% if latest.mfa == 'yes' %}✓ Enabled{% else %}✗ Disabled{% endif %}
-                    </span>
-                </div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">💾</div>
-                        <div>
-                            <div class="scan-name">Data Backups</div>
-                            <div class="scan-sub">Ransomware protection</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.backups == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
-                        {% if latest.backups == 'yes' %}✓ Active{% else %}✗ None{% endif %}
-                    </span>
-                </div>
-                <div class="scan-row">
-                    <div class="scan-left">
-                        <div class="scan-icon">🔐</div>
-                        <div>
-                            <div class="scan-name">Data Encryption</div>
-                            <div class="scan-sub">Data protection</div>
-                        </div>
-                    </div>
-                    <span class="{% if latest.encryption == 'yes' %}badge-ok{% else %}badge-fail{% endif %}">
-                        {% if latest.encryption == 'yes' %}✓ Enabled{% else %}✗ Disabled{% endif %}
-                    </span>
-                </div>
+                <span class="comp-pct" style="color:#F09595">0%</span>
             </div>
         </div>
-
-        <!-- ===== ATTACK SIMULATION PAGE ===== -->
-        <div class="page" id="page-simulation">
-            <div class="panel">
-                <div class="panel-hd">
-                    <span class="panel-title">AI ATTACK SIMULATION</span>
-                    <span style="font-size:10px;color:rgba(255,255,255,0.25)">Powered by OpenAI</span>
-                </div>
-                <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.6">
-                    Based on your vulnerabilities — here is exactly how a hacker would attack
-                    <strong style="color:rgba(255,255,255,0.6)">{{ current_user.company_name }}</strong> today
-                </div>
-                {% for step in attack_steps %}
-                <div class="sim-step">
-                    <div class="sim-num">{{ loop.index }}</div>
-                    <div class="sim-text">{{ step }}</div>
-                </div>
-                {% endfor %}
-                <div style="margin-top:12px;padding:10px 14px;background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.15);border-radius:8px;font-size:11px;color:rgba(239,159,39,0.7)">
-                    ⚠️ This simulation is based on real attack techniques. Fix the issues in your scan results to close these attack paths.
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== RECOMMENDATIONS PAGE ===== -->
-        <div class="page" id="page-recommendations">
-            <div class="panel">
-                <div class="panel-hd"><span class="panel-title">AI RECOMMENDATIONS</span></div>
-                {% for rec in recommendations %}
-                <div class="rec-row {{ rec.type }}">
-                    <div class="rec-ico">{{ rec.icon }}</div>
-                    <div>
-                        <div class="rec-cat">{{ rec.category }}</div>
-                        {{ rec.text }}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ===== DOOR LOCK PAGE ===== -->
-        <div class="page" id="page-doorlock">
-            <div class="panel">
-                <div class="panel-hd"><span class="panel-title">🚪 DIGITAL DOOR LOCK SCORE</span></div>
-                <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;line-height:1.6">
-                    Every night business owners lock their physical doors — but are they locking their digital ones?
-                </div>
-                <div class="door-row">
-                    <div class="door-left">
-                        <div class="door-icon">🚪</div>
-                        <div><div class="door-name">Front door</div><div class="door-sub">MFA — Main account access</div></div>
-                    </div>
-                    <span class="{% if latest.mfa == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
-                        {% if latest.mfa == 'yes' %}🔒 Locked{% else %}🔓 Unlocked{% endif %}
-                    </span>
-                </div>
-                <div class="door-row">
-                    <div class="door-left">
-                        <div class="door-icon">🚨</div>
-                        <div><div class="door-name">Alarm system</div><div class="door-sub">Antivirus — Threat detection</div></div>
-                    </div>
-                    <span class="{% if latest.antivirus == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
-                        {% if latest.antivirus == 'yes' %}🔒 Active{% else %}🔓 No alarm{% endif %}
-                    </span>
-                </div>
-                <div class="door-row">
-                    <div class="door-left">
-                        <div class="door-icon">📁</div>
-                        <div><div class="door-name">Safe & vault</div><div class="door-sub">Backups — Data protection</div></div>
-                    </div>
-                    <span class="{% if latest.backups == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
-                        {% if latest.backups == 'yes' %}🔒 Secured{% else %}🔓 No safe{% endif %}
-                    </span>
-                </div>
-                <div class="door-row">
-                    <div class="door-left">
-                        <div class="door-icon">📧</div>
-                        <div><div class="door-name">Letterbox lock</div><div class="door-sub">SPF/DMARC — Email security</div></div>
-                    </div>
-                    <span class="{% if latest.spf_status == 'found' %}door-locked{% else %}door-unlocked{% endif %}">
-                        {% if latest.spf_status == 'found' %}🔒 Protected{% else %}🔓 Open letterbox{% endif %}
-                    </span>
-                </div>
-                <div class="door-row">
-                    <div class="door-left">
-                        <div class="door-icon">🪟</div>
-                        <div><div class="door-name">Windows & doors</div><div class="door-sub">Encryption — Data security</div></div>
-                    </div>
-                    <span class="{% if latest.encryption == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
-                        {% if latest.encryption == 'yes' %}🔒 Closed{% else %}🔓 Open{% endif %}
-                    </span>
-                </div>
-                <div class="door-row">
-                    <div class="door-left">
-                        <div class="door-icon">👥</div>
-                        <div><div class="door-name">Security training</div><div class="door-sub">Staff awareness</div></div>
-                    </div>
-                    <span class="{% if latest.training == 'yes' %}door-locked{% else %}door-unlocked{% endif %}">
-                        {% if latest.training == 'yes' %}🔒 Trained{% else %}🔓 Untrained{% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== BENCHMARK PAGE ===== -->
-        <div class="page" id="page-benchmark">
-            <div class="panel">
-                <div class="panel-hd"><span class="panel-title">INDUSTRY BENCHMARKING</span></div>
-                <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:20px">
-                    How does {{ current_user.company_name }} compare to other {{ current_user.industry }} businesses?
-                </div>
-                <div class="bench-row">
-                    <span class="bench-label" style="color:#F09595">Your score</span>
-                    <div class="bench-bar"><div class="bench-fill" style="width:{{ latest.score }}%;background:#E24B4A"></div></div>
-                    <span class="bench-val rv">{{ latest.score }}</span>
-                </div>
-                <div class="bench-row">
-                    <span class="bench-label">Industry avg</span>
-                    <div class="bench-bar"><div class="bench-fill" style="width:48%;background:rgba(255,255,255,0.2)"></div></div>
-                    <span class="bench-val" style="color:rgba(255,255,255,0.4)">48</span>
-                </div>
-                <div class="bench-row">
-                    <span class="bench-label" style="color:#97C459">Top 10%</span>
-                    <div class="bench-bar"><div class="bench-fill" style="width:18%;background:#639922"></div></div>
-                    <span class="bench-val gv">18</span>
-                </div>
-
-                <div style="margin-top:20px;padding:14px 16px;border-radius:8px;
-                    {% if latest.score > 48 %}background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.15)
-                    {% else %}background:rgba(99,153,34,0.08);border:0.5px solid rgba(99,153,34,0.15){% endif %}">
-                    <div style="font-size:13px;font-weight:600;margin-bottom:6px;
-                        {% if latest.score > 48 %}color:#F09595{% else %}color:#97C459{% endif %}">
-                        {% if latest.score > 48 %}
-                            Your business is more vulnerable than the {{ current_user.industry }} average
-                        {% else %}
-                            Your business is more secure than the {{ current_user.industry }} average
-                        {% endif %}
-                    </div>
-                    <div style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.5">
-                        {% if latest.score > 48 %}
-                            Your risk score of {{ latest.score }} is {{ latest.score - 48 }} points above the industry average of 48. Address the critical issues to improve your position.
-                        {% else %}
-                            Your risk score of {{ latest.score }} is {{ 48 - latest.score }} points below the industry average of 48. Keep maintaining these security practices.
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== HISTORY PAGE ===== -->
-        <div class="page" id="page-history">
-            <div class="panel">
-                <div class="panel-hd"><span class="panel-title">ASSESSMENT HISTORY</span></div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>DATE</th>
-                            <th>SCORE</th>
-                            <th>RISK LEVEL</th>
-                            <th>SSL</th>
-                            <th>SPF</th>
-                            <th>DMARC</th>
-                            <th>REPORT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for a in assessments %}
-                        <tr>
-                            <td>{{ a.created_at.strftime('%d %b %Y — %H:%M') }}</td>
-                            <td style="font-weight:600;color:
-                                {% if a.risk_level == 'High' %}#F09595
-                                {% elif a.risk_level == 'Medium' %}#EF9F27
-                                {% else %}#97C459{% endif %}">{{ a.score }}</td>
-                            <td>
-                                <span class="{% if a.risk_level == 'High' %}badge-high{% elif a.risk_level == 'Medium' %}badge-medium{% else %}badge-low{% endif %}">
-                                    {{ a.risk_level }}
-                                </span>
-                            </td>
-                            <td><span class="{% if a.ssl_status == 'valid' %}badge-ok{% else %}badge-fail{% endif %}">{{ a.ssl_status }}</span></td>
-                            <td><span class="{% if a.spf_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">{{ a.spf_status }}</span></td>
-                            <td><span class="{% if a.dmarc_status == 'found' %}badge-ok{% else %}badge-fail{% endif %}">{{ a.dmarc_status }}</span></td>
-                            <td><a href="/download-pdf/{{ a.id }}" style="color:#378ADD;font-size:11px">📄 PDF</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {% else %}
-        <!-- EMPTY STATE -->
-        <div class="empty-state">
-            <div class="empty-icon">🛡️</div>
-            <div class="empty-title">No assessments yet</div>
-            <div class="empty-sub">Run your first scan to see your complete security dashboard</div>
-            <a href="/assessment" class="btn-start">Start First Assessment →</a>
-        </div>
-        {% endif %}
     </div>
+
+    {% else %}
+    <div style="text-align:center;padding:80px 20px">
+        <i class="ti ti-shield" style="font-size:48px;color:rgba(55,138,221,0.3);display:block;margin-bottom:16px"></i>
+        <div style="font-size:18px;font-weight:600;color:#E6F1FB;margin-bottom:8px">No assessments yet</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.3);margin-bottom:24px">Run your first scan to see your complete security dashboard</div>
+        <a href="/assessment" style="background:#185FA5;color:white;padding:12px 28px;border-radius:8px;font-size:14px;text-decoration:none">Start First Assessment →</a>
+    </div>
+    {% endif %}
 </div>
 
 <script>
-function showPage(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    event.currentTarget.classList.add('active');
-    const titles = {
-        overview: 'Overview',
-        scan: 'Live scan results',
-        simulation: 'AI attack simulation',
-        recommendations: 'AI recommendations',
-        doorlock: 'Digital door lock score',
-        benchmark: 'Industry benchmarking',
-        history: 'Assessment history'
-    };
-    document.getElementById('page-title').textContent = titles[name] || name;
+function toggleAI() {
+    const panel = document.getElementById('aiPanel');
+    const main = document.getElementById('mainContent');
+    panel.classList.toggle('open');
+    main.classList.toggle('ai-open');
+}
+
+function askAI(question) {
+    document.getElementById('aiInput').value = question;
+    sendAI();
+}
+
+function sendAI() {
+    const input = document.getElementById('aiInput');
+    const messages = document.getElementById('aiMessages');
+    const question = input.value.trim();
+    if (!question) return;
+
+    messages.innerHTML += `<div class="ai-msg user">${question}</div>`;
+    input.value = '';
+
+    const thinking = document.createElement('div');
+    thinking.className = 'ai-msg ai';
+    thinking.textContent = 'Analysing your security data...';
+    messages.appendChild(thinking);
+    messages.scrollTop = messages.scrollHeight;
+
+    fetch('/ai-advisor', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question: question})
+    })
+    .then(r => r.json())
+    .then(data => {
+        thinking.textContent = data.answer;
+        messages.scrollTop = messages.scrollHeight;
+    })
+    .catch(() => {
+        thinking.textContent = 'Unable to connect to AI advisor. Please try again.';
+    });
 }
 
 {% if assessments|length > 0 %}
 const labels = [{% for a in assessments|reverse %}"{{ a.created_at.strftime('%d %b') }}"{% if not loop.last %},{% endif %}{% endfor %}];
 const scores = [{% for a in assessments|reverse %}{{ a.score }}{% if not loop.last %},{% endif %}{% endfor %}];
 
-new Chart(document.getElementById('historyChart'), {
+new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: {
         labels: labels,
         datasets: [{
-            label: 'Risk Score',
             data: scores,
             borderColor: '#378ADD',
-            backgroundColor: 'rgba(55,138,221,0.08)',
+            backgroundColor: 'rgba(55,138,221,0.06)',
             borderWidth: 2,
             pointBackgroundColor: '#378ADD',
             pointRadius: 4,
@@ -697,15 +774,28 @@ new Chart(document.getElementById('historyChart'), {
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+            legend: {display: false},
+            tooltip: {
+                backgroundColor: '#0d1627',
+                borderColor: 'rgba(55,138,221,0.3)',
+                borderWidth: 1,
+                titleColor: '#85B7EB',
+                bodyColor: 'rgba(255,255,255,0.7)',
+                callbacks: {
+                    label: ctx => `Risk Score: ${ctx.raw}`
+                }
+            }
+        },
         scales: {
-            y: { min: 0, max: 100,
-                grid: { color: 'rgba(255,255,255,0.04)' },
-                ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
+            y: {
+                min: 0, max: 100,
+                grid: {color: 'rgba(255,255,255,0.04)'},
+                ticks: {color: 'rgba(255,255,255,0.3)', font: {size: 10}}
             },
             x: {
-                grid: { color: 'rgba(255,255,255,0.04)' },
-                ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
+                grid: {color: 'rgba(255,255,255,0.04)'},
+                ticks: {color: 'rgba(255,255,255,0.3)', font: {size: 10}}
             }
         }
     }
