@@ -193,37 +193,37 @@ def generate_recommendations(answers, ssl_result, dns_result, breach_result):
     return recs
 
 def generate_attack_simulation(company_name, domain, answers, ssl_result, dns_result):
-    from openai import OpenAI
-    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-    issues = []
-    if answers['mfa'] == 'no':
-        issues.append("MFA is not enabled")
-    if answers['antivirus'] == 'no':
-        issues.append("No antivirus software")
-    if answers['backups'] == 'no':
-        issues.append("No data backups")
-    if answers['training'] == 'no':
-        issues.append("Staff have no cybersecurity training")
-    if answers['passwords'] == 'no':
-        issues.append("Weak password policies")
-    if answers['encryption'] == 'no':
-        issues.append("No data encryption")
-    if ssl_result.get('status') == 'invalid':
-        issues.append("Invalid SSL certificate")
-    if dns_result.get('spf') == 'missing':
-        issues.append("SPF record missing")
-    if dns_result.get('dmarc') == 'missing':
-        issues.append("DMARC record missing")
-    issues_text = '\n'.join(f"- {i}" for i in issues) if issues else "- No major issues found"
-    prompt = f"""You are a cybersecurity expert. Write a realistic attack simulation for a small business.
+    try:
+        from groq import Groq
+        client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
+        issues = []
+        if answers['mfa'] == 'no':
+            issues.append("MFA is not enabled")
+        if answers['antivirus'] == 'no':
+            issues.append("No antivirus software")
+        if answers['backups'] == 'no':
+            issues.append("No data backups")
+        if answers['training'] == 'no':
+            issues.append("Staff have no cybersecurity training")
+        if answers['passwords'] == 'no':
+            issues.append("Weak password policies")
+        if answers['encryption'] == 'no':
+            issues.append("No data encryption")
+        if ssl_result.get('status') == 'invalid':
+            issues.append("Invalid SSL certificate")
+        if dns_result.get('spf') == 'missing':
+            issues.append("SPF record missing")
+        if dns_result.get('dmarc') == 'missing':
+            issues.append("DMARC record missing")
+        issues_text = '\n'.join(f"- {i}" for i in issues) if issues else "- No major issues found"
+        prompt = f"""You are a cybersecurity expert. Write a realistic attack simulation for a small business.
 Company: {company_name}
 Domain: {domain}
 Vulnerabilities:
 {issues_text}
 Write exactly 4 steps showing how a hacker would attack this business. Each step 1-2 sentences. Use company name. Plain English. Start each with "Step X:"."""
-    try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="llama3-8b-8192",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=400,
             temperature=0.7
@@ -426,10 +426,12 @@ def live_monitor():
 
 @app.route('/ai-advisor', methods=['POST'])
 @login_required
+@app.route('/ai-advisor', methods=['POST'])
+@login_required
 def ai_advisor():
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+        from groq import Groq
+        client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
         data = request.get_json()
         question = data.get('question', '')
         assessments = Assessment.query.filter_by(
@@ -450,7 +452,7 @@ Antivirus: {latest.antivirus if latest else 'N/A'}
 Backups: {latest.backups if latest else 'N/A'}
 Answer in plain English. Be specific. Max 3-4 sentences."""
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="llama3-8b-8192",
             messages=[
                 {"role": "system", "content": context},
                 {"role": "user", "content": question}
