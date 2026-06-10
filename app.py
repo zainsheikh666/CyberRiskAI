@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
 load_dotenv()
@@ -216,12 +216,10 @@ def generate_attack_simulation(company_name, domain, answers, ssl_result, dns_re
         issues.append("DMARC record missing")
     issues_text = '\n'.join(f"- {i}" for i in issues) if issues else "- No major issues found"
     prompt = f"""You are a cybersecurity expert. Write a realistic attack simulation for a small business.
-
 Company: {company_name}
 Domain: {domain}
 Vulnerabilities:
 {issues_text}
-
 Write exactly 4 steps showing how a hacker would attack this business. Each step 1-2 sentences. Use company name. Plain English. Start each with "Step X:"."""
     try:
         response = client.chat.completions.create(
@@ -403,6 +401,67 @@ def port_scanner():
     return render_template('port_scanner.html',
         domain=domain, result=result, error=None)
 
+@app.route('/live-monitor')
+@login_required
+def live_monitor():
+    assessments = Assessment.query.filter_by(
+        company_id=current_user.id
+    ).order_by(Assessment.created_at.desc()).all()
+    latest = assessments[0] if assessments else None
+    port_result = None
+    ssl_result = None
+    dns_result = None
+    if latest and current_user.domain:
+        port_result = check_ports(current_user.domain)
+        ssl_result = check_ssl(current_user.domain)
+        dns_result = check_dns(current_user.domain)
+    return render_template('live_monitor.html',
+        latest=latest,
+        assessments=assessments,
+        port_result=port_result,
+        ssl_result=ssl_result,
+        dns_result=dns_result,
+        domain=current_user.domain or ''
+    )
+
+@app.route('/ai-advisor', methods=['POST'])
+@login_required
+def ai_advisor():
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+        data = request.get_json()
+        question = data.get('question', '')
+        assessments = Assessment.query.filter_by(
+            company_id=current_user.id
+        ).order_by(Assessment.created_at.desc()).all()
+        latest = assessments[0] if assessments else None
+        context = f"""You are an AI Security Advisor for {current_user.company_name}.
+Company: {current_user.company_name}
+Industry: {current_user.industry}
+Domain: {current_user.domain}
+Risk Score: {latest.score if latest else 'N/A'}/100
+Risk Level: {latest.risk_level if latest else 'N/A'}
+SSL: {latest.ssl_status if latest else 'N/A'}
+SPF: {latest.spf_status if latest else 'N/A'}
+DMARC: {latest.dmarc_status if latest else 'N/A'}
+MFA: {latest.mfa if latest else 'N/A'}
+Antivirus: {latest.antivirus if latest else 'N/A'}
+Backups: {latest.backups if latest else 'N/A'}
+Answer in plain English. Be specific. Max 3-4 sentences."""
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": context},
+                {"role": "user", "content": question}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        return jsonify({'answer': response.choices[0].message.content})
+    except Exception as e:
+        return jsonify({'answer': f'Error: {str(e)}'})
+
 @app.route('/download-pdf/<int:assessment_id>')
 @login_required
 def download_pdf(assessment_id):
@@ -451,69 +510,6 @@ def download_pdf(assessment_id):
 @app.route('/waitlist', methods=['POST'])
 def waitlist():
     return redirect(url_for('register'))
-@app.route('/ai-advisor', methods=['POST'])
-@login_required
-def ai_advisor():
-    from openai import OpenAI
-    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-    data = request.get_json()
-    question = data.get('question', '')
-    assessments = Assessment.query.filter_by(
-        company_id=current_user.id
-    ).order_by(Assessment.created_at.desc()).all()
-    latest = assessments[0] if assessments else None
-    context = f"""You are an AI Security Advisor for {current_user.company_name}.
-Company: {current_user.company_name}
-Industry: {current_user.industry}
-Domain: {current_user.domain}
-Risk Score: {latest.score if latest else 'N/A'}/100
-Risk Level: {latest.risk_level if latest else 'N/A'}
-SSL Status: {latest.ssl_status if latest else 'N/A'}
-SPF Status: {latest.spf_status if latest else 'N/A'}
-DMARC Status: {latest.dmarc_status if latest else 'N/A'}
-MFA Enabled: {latest.mfa if latest else 'N/A'}
-Antivirus: {latest.antivirus if latest else 'N/A'}
-Backups: {latest.backups if latest else 'N/A'}
-Dark Web Breach: {latest.breach_found if latest else 'N/A'}
-Answer in plain English. Be specific and actionable. Max 3-4 sentences."""
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": context},
-                {"role": "user", "content": question}
-            ],
-            max_tokens=200,
-            temperature=0.7
-        )
-        return {'answer': response.choices[0].message.content}
-    except:
-        return {'answer': 'Unable to connect to AI advisor right now. Please try again.'}
-@app.route('/live-monitor')
-@login_required
-def live_monitor():
-    assessments = Assessment.query.filter_by(
-        company_id=current_user.id
-    ).order_by(Assessment.created_at.desc()).all()
-    latest = assessments[0] if assessments else None
-    
-    port_result = None
-    ssl_result = None
-    dns_result = None
-    
-    if latest and current_user.domain:
-        port_result = check_ports(current_user.domain)
-        ssl_result = check_ssl(current_user.domain)
-        dns_result = check_dns(current_user.domain)
-    
-    return render_template('live_monitor.html',
-        latest=latest,
-        assessments=assessments,
-        port_result=port_result,
-        ssl_result=ssl_result,
-        dns_result=dns_result,
-        domain=current_user.domain or ''
-    )
 
 if __name__ == '__main__':
     app.run(debug=True)
