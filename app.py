@@ -554,6 +554,37 @@ def ai_advisor_page():
         latest=latest,
         domain=current_user.domain or ''
     )
+@app.route('/vulnerability-scanner', methods=['GET', 'POST'])
+@login_required
+def vulnerability_scanner():
+    result = None
+    domain = ''
+    if request.method == 'POST':
+        domain = request.form.get('domain', '').strip()
+        if domain:
+            if not validate_domain(domain):
+                return render_template('vulnerability_scanner.html',
+                    error='Domain does not exist.',
+                    domain=domain, result=None,
+                    latest=None)
+            ssl_result = check_ssl(domain)
+            dns_result = check_dns(domain)
+            port_result = check_ports(domain)
+            result = {
+                'ssl': ssl_result,
+                'dns': dns_result,
+                'ports': port_result,
+            }
+    assessments = Assessment.query.filter_by(
+        company_id=current_user.id
+    ).order_by(Assessment.created_at.desc()).all()
+    latest = assessments[0] if assessments else None
+    return render_template('vulnerability_scanner.html',
+        domain=domain,
+        result=result,
+        latest=latest,
+        error=None
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
