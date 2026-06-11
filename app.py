@@ -510,6 +510,28 @@ def download_pdf(assessment_id):
 @app.route('/waitlist', methods=['POST'])
 def waitlist():
     return redirect(url_for('register'))
+@app.route('/attack-surface', methods=['GET', 'POST'])
+@login_required
+def attack_surface():
+    assessments = Assessment.query.filter_by(
+        company_id=current_user.id
+    ).order_by(Assessment.created_at.desc()).all()
+    latest = assessments[0] if assessments else None
+    port_result = None
+    ssl_result = None
+    dns_result = None
+    domain = request.args.get('domain', current_user.domain or '')
+    if domain:
+        port_result = check_ports(domain)
+        ssl_result = check_ssl(domain)
+        dns_result = check_dns(domain)
+    return render_template('attack_surface.html',
+        latest=latest,
+        port_result=port_result,
+        ssl_result=ssl_result,
+        dns_result=dns_result,
+        domain=domain
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
