@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Map — CyberRisk AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#060d1a;color:white;font-family:'Segoe UI',sans-serif}
+        .topbar{position:fixed;top:0;left:0;right:0;height:52px;background:#080f1e;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 16px;gap:12px;z-index:200}
+        .logo-icon{width:28px;height:28px;background:linear-gradient(135deg,#185FA5,#378ADD);border-radius:7px;display:flex;align-items:center;justify-content:center}
+        .logo-icon i{font-size:14px;color:white}
+        .logo-name{font-size:13px;font-weight:700;color:#E6F1FB}
+        .logo-name span{color:#378ADD}
+        .back-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:0.5px solid rgba(55,138,221,0.3);color:#85B7EB;font-size:12px;text-decoration:none;margin-left:auto}
+        .back-btn:hover{background:rgba(55,138,221,0.08);color:#85B7EB}
+        .wrap{margin-top:52px;padding:20px}
+        .page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+        .page-title{font-size:18px;font-weight:700;color:#E6F1FB;display:flex;align-items:center;gap:10px}
+        .live-badge{display:flex;align-items:center;gap:5px;background:rgba(226,75,74,0.1);border:0.5px solid rgba(226,75,74,0.2);color:#F09595;padding:5px 12px;border-radius:20px;font-size:11px}
+        .live-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;animation:blink 1s infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+        .alert-bar{background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.25);border-radius:10px;padding:16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px}
+        .alert-icon{width:40px;height:40px;border-radius:9px;background:rgba(226,75,74,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .alert-icon i{font-size:20px;color:#F09595}
+        .alert-title{font-size:14px;font-weight:600;color:#F09595;margin-bottom:5px}
+        .alert-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6}
+        .alert-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+        .btn-fix{display:flex;align-items:center;gap:5px;background:#185FA5;color:white;padding:8px 16px;border-radius:7px;font-size:12px;font-weight:500;border:none;cursor:pointer;text-decoration:none}
+        .btn-fix:hover{background:#378ADD;color:white}
+        .btn-outline{display:flex;align-items:center;gap:5px;background:transparent;color:#85B7EB;padding:8px 16px;border-radius:7px;font-size:12px;border:0.5px solid rgba(55,138,221,0.3);cursor:pointer;text-decoration:none}
+        .main-grid{display:grid;grid-template-columns:1fr 320px;gap:14px;margin-bottom:14px}
+        .map-wrap{background:#080e1d;border:0.5px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;position:relative;height:480px}
+        .map-wrap canvas{display:block;width:100%;height:100%}
+        .tooltip{position:absolute;background:#0d1627;border:0.5px solid rgba(55,138,221,0.3);border-radius:8px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.8);pointer-events:none;display:none;z-index:10;min-width:200px}
+        .right-col{display:flex;flex-direction:column;gap:12px}
+        .panel{background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:9px;padding:14px}
+        .phd{font-size:10px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:0.05em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+        .feed-item{padding:9px 11px;border-radius:7px;margin-bottom:5px;animation:fadeIn 0.4s ease}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+        .feed-critical{background:rgba(226,75,74,0.07);border:0.5px solid rgba(226,75,74,0.12)}
+        .feed-high{background:rgba(239,159,39,0.06);border:0.5px solid rgba(239,159,39,0.1)}
+        .feed-city{font-size:10px;font-weight:600;margin-bottom:3px}
+        .feed-type{font-size:10px;color:rgba(255,255,255,0.45);line-height:1.4}
+        .feed-bottom{font-size:9px;color:rgba(255,255,255,0.2);margin-top:4px;display:flex;align-items:center;justify-content:space-between}
+        .feed-fix{font-size:9px;color:#85B7EB;cursor:pointer;font-weight:600;text-decoration:none}
+        .feed-fix:hover{color:#378ADD}
+        .action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        .action-card{background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:9px;padding:14px;text-align:center}
+        .action-num{font-size:24px;font-weight:700;line-height:1;margin-bottom:4px}
+        .action-lbl{font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:10px;letter-spacing:0.04em}
+        .action-btn{width:100%;padding:7px;border-radius:6px;font-size:10px;font-weight:500;border:none;cursor:pointer;text-decoration:none;display:block}
+        .btn-red{background:rgba(226,75,74,0.15);color:#F09595}
+        .btn-blue{background:rgba(55,138,221,0.12);color:#85B7EB}
+        .btn-green{background:rgba(99,153,34,0.12);color:#97C459}
+        .impact-box{padding:12px 14px;background:rgba(239,159,39,0.07);border:0.5px solid rgba(239,159,39,0.15);border-radius:8px;margin-bottom:10px}
+        .impact-title{font-size:11px;font-weight:600;color:#EF9F27;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+        .impact-desc{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6}
+        .sector-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid rgba(255,255,255,0.04);font-size:11px}
+        .sector-row:last-child{border:none}
+        .sector-l{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,0.5)}
+        .sector-l i{font-size:13px}
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="logo-icon"><i class="ti ti-shield-bolt"></i></div>
+    <div style="margin-left:8px">
+        <div style="display:flex;align-items:center;gap:4px">
+            <span class="logo-name">Cyber<span>Risk AI</span></span>
+            <span style="font-size:9px;background:rgba(55,138,221,0.2);border:0.5px solid rgba(55,138,221,0.3);color:#85B7EB;padding:1px 5px;border-radius:4px">9D</span>
+        </div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.25)">AI-Powered Threat Intelligence</div>
+    </div>
+    <div style="margin-left:16px;display:flex;align-items:center;gap:5px;background:rgba(55,138,221,0.08);border:0.5px solid rgba(55,138,221,0.15);color:#85B7EB;padding:5px 12px;border-radius:7px;font-size:11px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#97C459;display:inline-block;animation:blink 1.5s infinite"></span>
+        Monitoring — {{ domain or 'your domain' }}
+    </div>
+    <a href="/dashboard" class="back-btn"><i class="ti ti-arrow-left"></i> Back to dashboard</a>
+</div>
+
+<div class="wrap">
+    <div class="page-hd">
+        <div class="page-title">
+            <i class="ti ti-map-pin" style="color:#378ADD"></i>
+            UK Threat Intelligence Map
+        </div>
+        <div class="live-badge"><div class="live-dot"></div> Live — updating every 5s</div>
+    </div>
+
+    <!-- PERSONALISED ALERT -->
+    {% if latest %}
+    <div class="alert-bar">
+        <div class="alert-icon"><i class="ti ti-alert-triangle"></i></div>
+        <div style="flex:1">
+            <div class="alert-title">
+                Your business is at risk from today's North West threats
+            </div>
+            <div class="alert-desc">
+                <strong style="color:#F09595">847 phishing attacks</strong> hit Manchester businesses today.
+                {% if latest.spf_status == 'missing' %}Your domain has <strong style="color:#F09595">no SPF record</strong> — attackers can send emails pretending to be <strong style="color:#EF9F27">{{ domain }}</strong>.{% endif %}
+                {% if latest.mfa == 'no' %}<strong style="color:#F09595"> MFA is disabled</strong> — your accounts are vulnerable to credential stuffing attacks targeting UK businesses right now.{% endif %}
+                <strong style="color:#EF9F27"> 3 businesses in your area were compromised this week.</strong>
+            </div>
+            <div class="alert-actions">
+                {% if latest.spf_status == 'missing' %}
+                <a href="/assessment" class="btn-fix"><i class="ti ti-tool"></i> Fix SPF now — 15 min</a>
+                {% endif %}
+                {% if latest.mfa == 'no' %}
+                <a href="/assessment" class="btn-fix"><i class="ti ti-key"></i> Enable MFA now</a>
+                {% endif %}
+                <a href="/download-pdf/{{ latest.id }}" class="btn-outline"><i class="ti ti-file-text"></i> Download report</a>
+                <a href="/assessment" class="btn-outline"><i class="ti ti-radar"></i> Rescan domain</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="main-grid">
+        <div class="map-wrap">
+            <canvas id="ukMap"></canvas>
+            <div class="tooltip" id="tooltip"></div>
+        </div>
+
+        <div class="right-col">
+            {% if latest %}
+            <div class="impact-box">
+                <div class="impact-title"><i class="ti ti-trending-up" style="font-size:13px"></i> Today's threats raised your risk</div>
+                <div class="impact-desc">
+                    Manchester phishing campaign
+                    {% if latest.spf_status == 'missing' %} + missing SPF record{% endif %}
+                    {% if latest.mfa == 'no' %} + no MFA{% endif %}
+                    = your risk score is <strong style="color:#F09595">{{ latest.score }}/100</strong>.
+                    Fix critical issues to reduce exposure.
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="panel" style="flex:1">
+                <div class="phd">
+                    LIVE THREATS — YOUR AREA
+                    <span style="font-size:9px;color:rgba(255,255,255,0.25)" id="feedTime"></span>
+                </div>
+                <div id="threatFeed"></div>
+            </div>
+
+            <div class="panel">
+                <div class="phd">MOST TARGETED SECTORS</div>
+                <div class="sector-row"><span class="sector-l"><i class="ti ti-building-store"></i> Retail shops</span><span style="color:#F09595;font-size:9px;font-weight:600">Critical</span></div>
+                <div class="sector-row"><span class="sector-l"><i class="ti ti-calculator"></i> Accountancy firms</span><span style="color:#F09595;font-size:9px;font-weight:600">Critical</span></div>
+                <div class="sector-row"><span class="sector-l"><i class="ti ti-stethoscope"></i> Healthcare / GP</span><span style="color:#EF9F27;font-size:9px;font-weight:600">High</span></div>
+                <div class="sector-row"><span class="sector-l"><i class="ti ti-utensils"></i> Restaurants</span><span style="color:#EF9F27;font-size:9px;font-weight:600">High</span></div>
+                <div class="sector-row"><span class="sector-l"><i class="ti ti-scale"></i> Law firms</span><span style="color:#EF9F27;font-size:9px;font-weight:600">High</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION CARDS -->
+    <div class="action-grid">
+        <div class="action-card">
+            <div class="action-num" style="color:#F09595" id="totalThreats">847</div>
+            <div class="action-lbl">THREATS IN YOUR AREA TODAY</div>
+            <a href="/live-monitor" class="action-btn btn-red">View live monitor →</a>
+        </div>
+        <div class="action-card">
+            <div class="action-num" style="color:#EF9F27">3</div>
+            <div class="action-lbl">BUSINESSES HIT NEAR YOU THIS WEEK</div>
+            <a href="/assessment" class="action-btn btn-blue">Run full assessment →</a>
+        </div>
+        <div class="action-card">
+            <div class="action-num" style="color:#F09595">{% if latest %}{{ [latest.score // 10, 1]|max }}{% else %}2{% endif %}</div>
+            <div class="action-lbl">CRITICAL FIXES NEEDED NOW</div>
+            <a href="/attack-surface" class="action-btn btn-red">View attack surface →</a>
+        </div>
+        <div class="action-card">
+            <div class="action-num" style="color:#97C459">£{% if latest %}{{ "{:,}".format(latest.score * 650) }}{% else %}47,000{% endif %}</div>
+            <div class="action-lbl">ESTIMATED LOSS IF ATTACKED TODAY</div>
+            <a href="/assessment" class="action-btn btn-green">Reduce my risk →</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('ukMap');
+canvas.width = canvas.parentElement.offsetWidth;
+canvas.height = canvas.parentElement.offsetHeight;
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const tooltip = document.getElementById('tooltip');
+
+function latLonToXY(lat, lon) {
+    const minLat=49.9,maxLat=58.7,minLon=-6.5,maxLon=1.8,pad=30;
+    return {
+        x: pad+((lon-minLon)/(maxLon-minLon))*(W-pad*2),
+        y: pad+((maxLat-lat)/(maxLat-minLat))*(H-pad*2)
+    };
+}
+
+const ukOutline=[
+    [58.6,-3.1],[58.1,-3.0],[57.6,-1.8],[57.1,-2.0],[56.5,-2.8],
+    [56.0,-3.2],[55.8,-4.8],[55.0,-5.1],[54.5,-5.5],[54.0,-4.6],
+    [53.4,-3.0],[53.0,-4.1],[52.8,-4.6],[52.0,-5.0],[51.6,-5.1],
+    [51.2,-3.0],[50.5,-1.0],[50.8,0.3],[51.3,1.4],[51.8,1.2],
+    [52.9,1.8],[53.8,0.3],[54.2,-0.5],[54.7,-1.2],[55.0,-1.4],
+    [55.7,-2.0],[56.5,-2.5],[57.0,-2.2],[57.6,-3.5],[58.0,-4.0],[58.6,-3.1]
+];
+
+const cities=[
+    {name:'Manchester',lat:53.48,lon:-2.24,threats:847,type:'Phishing + RDP',risk:'critical',yours:true,fix:'Add SPF record'},
+    {name:'London',lat:51.51,lon:-0.12,threats:2341,type:'BEC + Data breach',risk:'critical',yours:false,fix:'Enable MFA'},
+    {name:'Birmingham',lat:52.48,lon:-1.90,threats:612,type:'Ransomware',risk:'critical',yours:false,fix:'Set up backups'},
+    {name:'Leeds',lat:53.80,lon:-1.55,threats:423,type:'HMRC phishing',risk:'high',yours:false,fix:'Train staff'},
+    {name:'Glasgow',lat:55.86,lon:-4.25,threats:318,type:'NHS credential theft',risk:'high',yours:false,fix:'Enable MFA'},
+    {name:'Liverpool',lat:53.41,lon:-2.99,threats:287,type:'Card skimming',risk:'high',yours:false,fix:'Secure POS'},
+    {name:'Sheffield',lat:53.38,lon:-1.47,threats:198,type:'Supply chain attack',risk:'medium',yours:false,fix:'Verify emails'},
+    {name:'Bristol',lat:51.45,lon:-2.59,threats:256,type:'API attacks',risk:'high',yours:false,fix:'Rate limiting'},
+    {name:'Edinburgh',lat:55.95,lon:-3.19,threats:189,type:'Credential stuffing',risk:'medium',yours:false,fix:'Password manager'},
+    {name:'Newcastle',lat:54.97,lon:-1.61,threats:167,type:'POS malware',risk:'medium',yours:false,fix:'Update software'},
+];
+
+const colors={critical:'#E24B4A',high:'#EF9F27',medium:'#85B7EB'};
+let particles=[];
+let total=847;
+
+cities.forEach(c=>{
+    const pos=latLonToXY(c.lat,c.lon);
+    const count=c.risk==='critical'?3:c.risk==='high'?2:1;
+    for(let i=0;i<count;i++){
+        const t=cities[Math.floor(Math.random()*cities.length)];
+        const tp=latLonToXY(t.lat,t.lon);
+        particles.push({fx:pos.x,fy:pos.y,tx:tp.x,ty:tp.y,progress:Math.random(),speed:0.003+Math.random()*0.004,color:colors[c.risk],trail:[]});
+    }
+});
+
+function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#080e1d';
+    ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(55,138,221,0.03)';
+    ctx.lineWidth=0.5;
+    for(let x=0;x<W;x+=W/8){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=H/8){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.beginPath();
+    ukOutline.forEach((p,i)=>{
+        const {x,y}=latLonToXY(p[0],p[1]);
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle='rgba(55,138,221,0.07)';
+    ctx.fill();
+    ctx.strokeStyle='rgba(55,138,221,0.25)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+
+    particles.forEach(p=>{
+        p.progress+=p.speed;
+        if(p.progress>=1){
+            p.progress=0;p.trail=[];total++;
+            document.getElementById('totalThreats').textContent=total.toLocaleString();
+        }
+        const t=p.progress;
+        const mx=(p.fx+p.tx)/2,my=Math.min(p.fy,p.ty)-20;
+        const bx=(1-t)*(1-t)*p.fx+2*(1-t)*t*mx+t*t*p.tx;
+        const by=(1-t)*(1-t)*p.fy+2*(1-t)*t*my+t*t*p.ty;
+        p.trail.push({x:bx,y:by});
+        if(p.trail.length>10)p.trail.shift();
+        for(let j=1;j<p.trail.length;j++){
+            ctx.beginPath();ctx.moveTo(p.trail[j-1].x,p.trail[j-1].y);ctx.lineTo(p.trail[j].x,p.trail[j].y);
+            ctx.strokeStyle=p.color;ctx.globalAlpha=(j/p.trail.length)*0.55;ctx.lineWidth=1.2;ctx.stroke();ctx.globalAlpha=1;
+        }
+        ctx.beginPath();ctx.arc(bx,by,2,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();
+    });
+
+    cities.forEach(c=>{
+        const {x,y}=latLonToXY(c.lat,c.lon);
+        const col=colors[c.risk];
+        const r=c.risk==='critical'?11:c.risk==='high'?8:6;
+        const pulse=Math.sin(Date.now()/500+c.lat)*4;
+        ctx.beginPath();ctx.arc(x,y,r+8+pulse,0,Math.PI*2);
+        ctx.strokeStyle=col;ctx.globalAlpha=0.1;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;
+        ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+        ctx.fillStyle=col;ctx.globalAlpha=0.18;ctx.fill();ctx.globalAlpha=1;
+        ctx.strokeStyle=col;ctx.lineWidth=c.yours?3:1.5;ctx.stroke();
+        ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+        if(c.yours){
+            ctx.fillStyle='#378ADD';
+            ctx.font='bold 9px Segoe UI';
+            ctx.textAlign='center';
+            ctx.fillText('YOU ARE HERE',x,y-r-8);
+        }
+        ctx.fillStyle='rgba(255,255,255,0.6)';
+        ctx.font='9px Segoe UI';
+        ctx.textAlign='center';
+        ctx.fillText(c.name,x,y+r+11);
+        ctx.fillStyle=col;
+        ctx.font='bold 8px Segoe UI';
+        ctx.fillText(c.threats+' threats',x,y+r+21);
+    });
+    requestAnimationFrame(draw);
+}
+draw();
+
+const feedData=[
+    {city:'Manchester',type:'Phishing targeting retail — fake invoice email',risk:'critical',fix:'Add SPF record',href:'/assessment'},
+    {city:'Manchester',type:'RDP brute force — 847 login attempts/hr',risk:'critical',fix:'Close port 3389',href:'/port-scanner'},
+    {city:'Leeds',type:'Fake HMRC refund email — accountancy sector',risk:'high',fix:'Train your staff',href:'/assessment'},
+    {city:'Liverpool',type:'Card skimming malware on restaurant POS',risk:'high',fix:'Update POS software',href:'/assessment'},
+    {city:'Birmingham',type:'LockBit ransomware — manufacturing firms',risk:'critical',fix:'Enable backups now',href:'/assessment'},
+    {city:'Manchester',type:'Business email compromise — invoice fraud',risk:'critical',fix:'Enable DMARC',href:'/assessment'},
+    {city:'Sheffield',type:'Supplier email spoofing attack',risk:'high',fix:'Verify supplier emails',href:'/assessment'},
+    {city:'Glasgow',type:'NHS staff credentials targeted via phishing',risk:'critical',fix:'Enable MFA now',href:'/assessment'},
+];
+
+const feedEl=document.getElementById('threatFeed');
+const timeEl=document.getElementById('feedTime');
+let idx=0;
+
+function addFeed(){
+    const d=feedData[idx%feedData.length];
+    const now=new Date().toLocaleTimeString('en-GB');
+    if(timeEl)timeEl.textContent=now;
+    const div=document.createElement('div');
+    div.className=`feed-item feed-${d.risk}`;
+    div.innerHTML=`
+        <div class="feed-city" style="color:${d.risk==='critical'?'#F09595':'#EF9F27'}">${d.city}</div>
+        <div class="feed-type">${d.type}</div>
+        <div class="feed-bottom">
+            <span>${now}</span>
+            <a href="${d.href}" class="feed-fix">Fix → ${d.fix}</a>
+        </div>
+    `;
+    feedEl.insertBefore(div,feedEl.firstChild);
+    if(feedEl.children.length>5)feedEl.removeChild(feedEl.lastChild);
+    idx++;
+}
+
+feedData.forEach((_,i)=>setTimeout(()=>addFeed(),i*700));
+setInterval(addFeed,4000);
+
+canvas.addEventListener('mousemove',e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)*(canvas.width/rect.width);
+    const my=(e.clientY-rect.top)*(canvas.height/rect.height);
+    let found=false;
+    cities.forEach(c=>{
+        const {x,y}=latLonToXY(c.lat,c.lon);
+        if(Math.hypot(mx-x,my-y)<18){
+            tooltip.style.display='block';
+            tooltip.style.left=Math.min(x+20,W-230)+'px';
+            tooltip.style.top=Math.max(y-90,0)+'px';
+            tooltip.innerHTML=`
+                <div style="font-weight:600;color:${colors[c.risk]};margin-bottom:6px;font-size:12px">${c.name}${c.yours?' — YOUR CITY':''}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:3px">Threats today: <strong style="color:${colors[c.risk]}">${c.threats}</strong></div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:6px">Attack type: ${c.type}</div>
+                <div style="font-size:10px;background:rgba(55,138,221,0.1);border:0.5px solid rgba(55,138,221,0.2);color:#85B7EB;padding:4px 8px;border-radius:5px">Recommended fix: ${c.fix}</div>
+            `;
+            found=true;
+        }
+    });
+    if(!found)tooltip.style.display='none';
+});
+</script>
+</body>
+</html>

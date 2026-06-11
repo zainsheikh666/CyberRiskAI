@@ -532,6 +532,17 @@ def attack_surface():
         dns_result=dns_result,
         domain=domain
     )
+@app.route('/threat-map')
+@login_required
+def threat_map():
+    assessments = Assessment.query.filter_by(
+        company_id=current_user.id
+    ).order_by(Assessment.created_at.desc()).all()
+    latest = assessments[0] if assessments else None
+    return render_template('threat_map.html',
+        latest=latest,
+        domain=current_user.domain or ''
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
