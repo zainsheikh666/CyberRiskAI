@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Security Advisor — CyberRisk AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#060d1a;color:white;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+        .topbar{height:52px;background:#080f1e;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:200}
+        .logo-icon{width:28px;height:28px;background:linear-gradient(135deg,#185FA5,#378ADD);border-radius:7px;display:flex;align-items:center;justify-content:center}
+        .logo-icon i{font-size:14px;color:white}
+        .logo-name{font-size:13px;font-weight:700;color:#E6F1FB}
+        .logo-name span{color:#378ADD}
+        .ai-header{display:flex;align-items:center;gap:8px;margin-left:16px}
+        .ai-icon-sm{width:28px;height:28px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:7px;display:flex;align-items:center;justify-content:center}
+        .ai-icon-sm i{font-size:13px;color:white}
+        .back-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:0.5px solid rgba(55,138,221,0.3);color:#85B7EB;font-size:12px;text-decoration:none;margin-left:auto}
+        .back-btn:hover{background:rgba(55,138,221,0.08);color:#85B7EB}
+        .online{display:flex;align-items:center;gap:5px;font-size:10px;color:#97C459}
+        .online-dot{width:6px;height:6px;border-radius:50%;background:#97C459;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .main{display:grid;grid-template-columns:1fr 280px;flex:1;overflow:hidden}
+        .chat-area{display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.06)}
+        .chat-header{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .chat-title{font-size:13px;font-weight:600;color:#E6F1FB;display:flex;align-items:center;gap:8px}
+        .beta{font-size:8px;background:rgba(124,58,237,0.2);border:0.5px solid rgba(124,58,237,0.3);color:#a78bfa;padding:1px 6px;border-radius:3px}
+        .messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+        .messages::-webkit-scrollbar{width:3px}
+        .messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+        .msg{display:flex;gap:10px;align-items:flex-start}
+        .msg.user{flex-direction:row-reverse}
+        .msg-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+        .av-ai{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white}
+        .av-user{background:#185FA5;color:white}
+        .msg-bubble{max-width:75%;padding:11px 14px;border-radius:12px;font-size:12px;line-height:1.7}
+        .bubble-ai{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.75)}
+        .bubble-user{background:rgba(124,58,237,0.15);border:0.5px solid rgba(124,58,237,0.25);color:#c4b5fd}
+        .msg-time{font-size:9px;color:rgba(255,255,255,0.2);margin-top:5px}
+        .msg.user .msg-time{text-align:right}
+        .suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px;flex-shrink:0}
+        .sug-btn{font-size:10px;padding:5px 11px;background:rgba(124,58,237,0.1);border:0.5px solid rgba(124,58,237,0.2);color:#a78bfa;border-radius:20px;cursor:pointer;transition:all 0.15s}
+        .sug-btn:hover{background:rgba(124,58,237,0.2);color:#c4b5fd}
+        .input-area{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;flex-shrink:0}
+        .chat-input{flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;color:white;padding:10px 14px;font-size:12px;outline:none;font-family:'Segoe UI',sans-serif;resize:none}
+        .chat-input:focus{border-color:rgba(124,58,237,0.5)}
+        .chat-input::placeholder{color:rgba(255,255,255,0.2)}
+        .send-btn{width:38px;height:38px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:9px;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .send-btn:hover{opacity:0.85}
+        .send-btn i{font-size:16px}
+        .right-col{display:flex;flex-direction:column;overflow-y:auto;background:#080e1d}
+        .right-col::-webkit-scrollbar{width:3px}
+        .right-col::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1)}
+        .rc-section{padding:14px;border-bottom:1px solid rgba(255,255,255,0.05)}
+        .rc-title{font-size:9px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:0.08em;margin-bottom:10px}
+        .risk-card{border-radius:8px;padding:12px;margin-bottom:10px;background:rgba({% if latest and latest.risk_level == 'High' %}226,75,74{% elif latest and latest.risk_level == 'Medium' %}239,159,39{% else %}99,153,34{% endif %},0.08);border:0.5px solid rgba({% if latest and latest.risk_level == 'High' %}226,75,74{% elif latest and latest.risk_level == 'Medium' %}239,159,39{% else %}99,153,34{% endif %},0.15)}
+        .risk-score{font-size:32px;font-weight:700;line-height:1;color:{% if latest and latest.risk_level == 'High' %}#F09595{% elif latest and latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}}
+        .risk-lbl{font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px}
+        .stat-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:11px;border-bottom:0.5px solid rgba(255,255,255,0.04)}
+        .stat-row:last-child{border:none}
+        .stat-l{color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:6px}
+        .stat-l i{font-size:12px}
+        .ok{color:#97C459;font-size:9px;font-weight:600}
+        .fail{color:#F09595;font-size:9px;font-weight:600}
+        .warn{color:#EF9F27;font-size:9px;font-weight:600}
+        .qa-btn{width:100%;text-align:left;padding:8px 10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:6px;color:rgba(255,255,255,0.45);font-size:10px;cursor:pointer;margin-bottom:4px;display:flex;align-items:center;gap:7px;font-family:'Segoe UI',sans-serif;transition:all 0.15s}
+        .qa-btn:hover{background:rgba(124,58,237,0.08);color:#a78bfa;border-color:rgba(124,58,237,0.2)}
+        .qa-btn i{font-size:12px;flex-shrink:0;color:#7c3aed}
+        .typing{display:flex;align-items:center;gap:5px;padding:8px 14px}
+        .typing-dot{width:6px;height:6px;border-radius:50%;background:#7c3aed;animation:typing 1.2s infinite}
+        .typing-dot:nth-child(2){animation-delay:0.2s}
+        .typing-dot:nth-child(3){animation-delay:0.4s}
+        @keyframes typing{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-6px);opacity:1}}
+        .financial-box{background:rgba(226,75,74,0.07);border:0.5px solid rgba(226,75,74,0.15);border-radius:8px;padding:10px 12px}
+        .fin-amount{font-size:24px;font-weight:700;color:#F09595;line-height:1;margin-bottom:3px}
+        .fin-lbl{font-size:10px;color:rgba(255,255,255,0.3)}
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="logo-icon"><i class="ti ti-shield-bolt"></i></div>
+    <div style="margin-left:8px">
+        <div style="display:flex;align-items:center;gap:4px">
+            <span class="logo-name">Cyber<span>Risk AI</span></span>
+            <span style="font-size:9px;background:rgba(55,138,221,0.2);border:0.5px solid rgba(55,138,221,0.3);color:#85B7EB;padding:1px 5px;border-radius:4px">9D</span>
+        </div>
+    </div>
+    <div class="ai-header">
+        <div class="ai-icon-sm"><i class="ti ti-sparkles"></i></div>
+        <div>
+            <div style="font-size:12px;font-weight:600;color:#E6F1FB">AI Security Advisor</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.3)">Powered by Llama 3.1</div>
+        </div>
+    </div>
+    <div class="online" style="margin-left:12px"><div class="online-dot"></div> Online</div>
+    <a href="/dashboard" class="back-btn"><i class="ti ti-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="main">
+    <div class="chat-area">
+        <div class="chat-header">
+            <div class="chat-title">
+                <i class="ti ti-message-circle" style="color:#7c3aed"></i>
+                Security Chat
+                <span class="beta">BETA</span>
+            </div>
+            <div class="online"><div class="online-dot"></div> AI ready</div>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="msg">
+                <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+                <div>
+                    <div class="msg-bubble bubble-ai">
+                        Hello {{ current_user.company_name }}! I am your AI Security Advisor.<br><br>
+                        {% if latest %}
+                        I have analysed your domain <strong style="color:#85B7EB">{{ current_user.domain }}</strong> and your current risk score is <strong style="color:{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}">{{ latest.score }}/100 ({{ latest.risk_level }} Risk)</strong>.<br><br>
+                        {% if latest.spf_status == 'missing' %}<strong style="color:#F09595">⚠ SPF record missing</strong> — email spoofing possible<br>{% endif %}
+                        {% if latest.dmarc_status == 'missing' %}<strong style="color:#F09595">⚠ DMARC missing</strong> — domain not protected<br>{% endif %}
+                        {% if latest.mfa == 'no' %}<strong style="color:#F09595">⚠ MFA disabled</strong> — accounts vulnerable<br>{% endif %}
+                        {% if latest.backups == 'no' %}<strong style="color:#EF9F27">⚠ No backups</strong> — ransomware risk<br>{% endif %}
+                        <br>Ask me anything — I give specific advice for your business.
+                        {% else %}
+                        Run your first assessment to get personalised security advice. Ask me anything about cybersecurity in the meantime!
+                        {% endif %}
+                    </div>
+                    <div class="msg-time">Just now</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="suggestions">
+            <div class="sug-btn" onclick="askQ('Am I vulnerable to ransomware?')">Am I vulnerable to ransomware?</div>
+            <div class="sug-btn" onclick="askQ('What is my biggest risk right now?')">Biggest risk?</div>
+            <div class="sug-btn" onclick="askQ('How do I fix my SPF record?')">Fix SPF record</div>
+            <div class="sug-btn" onclick="askQ('Am I GDPR compliant?')">GDPR compliance</div>
+            <div class="sug-btn" onclick="askQ('What should I fix first?')">What to fix first?</div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" class="chat-input" id="chatInput"
+                placeholder="Ask anything about your security..."
+                onkeypress="if(event.key==='Enter')sendMsg()">
+            <button class="send-btn" onclick="sendMsg()"><i class="ti ti-send"></i></button>
+        </div>
+    </div>
+
+    <div class="right-col">
+        <div class="rc-section">
+            <div class="rc-title">YOUR SECURITY STATUS</div>
+            {% if latest %}
+            <div class="risk-card">
+                <div class="risk-score">{{ latest.score }}</div>
+                <div class="risk-lbl">{{ latest.risk_level }} Risk — /100</div>
+            </div>
+            <div class="stat-row"><span class="stat-l"><i class="ti ti-lock"></i> SSL</span><span class="{% if latest.ssl_status == 'valid' %}ok{% else %}fail{% endif %}">{% if latest.ssl_status == 'valid' %}✓ Valid{% else %}✗ Invalid{% endif %}</span></div>
+            <div class="stat-row"><span class="stat-l"><i class="ti ti-mail"></i> SPF</span><span class="{% if latest.spf_status == 'found' %}ok{% else %}fail{% endif %}">{% if latest.spf_status == 'found' %}✓ Found{% else %}✗ Missing{% endif %}</span></div>
+            <div class="stat-row"><span class="stat-l"><i class="ti ti-shield"></i> DMARC</span><span class="{% if latest.dmarc_status == 'found' %}ok{% else %}fail{% endif %}">{% if latest.dmarc_status == 'found' %}✓ Found{% else %}✗ Missing{% endif %}</span></div>
+            <div class="stat-row"><span class="stat-l"><i class="ti ti-key"></i> MFA</span><span class="{% if latest.mfa == 'yes' %}ok{% else %}fail{% endif %}">{% if latest.mfa == 'yes' %}✓ Enabled{% else %}✗ Disabled{% endif %}</span></div>
+            <div class="stat-row"><span class="stat-l"><i class="ti ti-world-search"></i> Dark web</span><span class="{% if latest.breach_found %}fail{% else %}ok{% endif %}">{% if latest.breach_found %}✗ Breached{% else %}✓ Clean{% endif %}</span></div>
+            <div class="stat-row"><span class="stat-l"><i class="ti ti-database"></i> Backups</span><span class="{% if latest.backups == 'yes' %}ok{% else %}fail{% endif %}">{% if latest.backups == 'yes' %}✓ Active{% else %}✗ None{% endif %}</span></div>
+            <div class="stat-row"><span class="stat-l"><i class="ti ti-virus"></i> Antivirus</span><span class="{% if latest.antivirus == 'yes' %}ok{% else %}fail{% endif %}">{% if latest.antivirus == 'yes' %}✓ Active{% else %}✗ Missing{% endif %}</span></div>
+            {% else %}
+            <div style="text-align:center;padding:20px;font-size:12px;color:rgba(255,255,255,0.3)">
+                <a href="/assessment" style="color:#85B7EB">Run assessment →</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="rc-section">
+            <div class="rc-title">QUICK QUESTIONS</div>
+            <button class="qa-btn" onclick="askQ('How do I enable MFA on my accounts?')"><i class="ti ti-key"></i> How to enable MFA?</button>
+            <button class="qa-btn" onclick="askQ('What is phishing and how do I protect against it?')"><i class="ti ti-mail"></i> What is phishing?</button>
+            <button class="qa-btn" onclick="askQ('How do I set up daily backups?')"><i class="ti ti-database"></i> How to set up backups?</button>
+            <button class="qa-btn" onclick="askQ('What is ransomware and how do I protect my business?')"><i class="ti ti-bug"></i> What is ransomware?</button>
+            <button class="qa-btn" onclick="askQ('Explain my risk score in plain English')"><i class="ti ti-chart-bar"></i> Explain my risk score</button>
+            <button class="qa-btn" onclick="askQ('What should I fix first to reduce my risk?')"><i class="ti ti-tool"></i> What to fix first?</button>
+            <button class="qa-btn" onclick="askQ('Am I compliant with UK Cyber Essentials?')"><i class="ti ti-certificate"></i> Cyber Essentials check</button>
+            <button class="qa-btn" onclick="askQ('How do I protect against email spoofing?')"><i class="ti ti-shield-check"></i> Stop email spoofing</button>
+        </div>
+
+        {% if latest %}
+        <div class="rc-section">
+            <div class="rc-title">FINANCIAL RISK</div>
+            <div class="financial-box">
+                <div class="fin-amount">£{{ "{:,}".format(latest.score * 650) }}</div>
+                <div class="fin-lbl">Estimated loss if attacked today</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function askQ(q) {
+    document.getElementById('chatInput').value = q;
+    sendMsg();
+}
+
+function sendMsg() {
+    const input = document.getElementById('chatInput');
+    const q = input.value.trim();
+    if(!q) return;
+
+    const msgs = document.getElementById('messages');
+    const time = new Date().toLocaleTimeString('en-GB');
+
+    msgs.innerHTML += `
+        <div class="msg user">
+            <div class="msg-av av-user">{{ current_user.company_name[0] }}</div>
+            <div>
+                <div class="msg-bubble bubble-user">${q}</div>
+                <div class="msg-time">${time}</div>
+            </div>
+        </div>
+    `;
+    input.value = '';
+    msgs.scrollTop = msgs.scrollHeight;
+
+    const typingId = 'typing-' + Date.now();
+    msgs.innerHTML += `
+        <div class="msg" id="${typingId}">
+            <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+            <div class="msg-bubble bubble-ai">
+                <div class="typing">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    fetch('/ai-advisor', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question: q})
+    })
+    .then(r => r.json())
+    .then(data => {
+        const el = document.getElementById(typingId);
+        if(el) el.remove();
+        const t2 = new Date().toLocaleTimeString('en-GB');
+        msgs.innerHTML += `
+            <div class="msg">
+                <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+                <div>
+                    <div class="msg-bubble bubble-ai">${data.answer.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+                    <div class="msg-time">${t2}</div>
+                </div>
+            </div>
+        `;
+        msgs.scrollTop = msgs.scrollHeight;
+    })
+    .catch(() => {
+        const el = document.getElementById(typingId);
+        if(el) el.remove();
+        msgs.innerHTML += `
+            <div class="msg">
+                <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+                <div>
+                    <div class="msg-bubble bubble-ai">Connection error — please try again.</div>
+                </div>
+            </div>
+        `;
+        msgs.scrollTop = msgs.scrollHeight;
+    });
+}
+</script>
+</body>
+</html>

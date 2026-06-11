@@ -543,6 +543,17 @@ def threat_map():
         latest=latest,
         domain=current_user.domain or ''
     )
+@app.route('/ai-advisor-page')
+@login_required
+def ai_advisor_page():
+    assessments = Assessment.query.filter_by(
+        company_id=current_user.id
+    ).order_by(Assessment.created_at.desc()).all()
+    latest = assessments[0] if assessments else None
+    return render_template('ai_advisor.html',
+        latest=latest,
+        domain=current_user.domain or ''
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
