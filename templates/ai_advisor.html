@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <style>
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:#060d1a;color:white;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+        body{background:#060d1a;color:white;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column}
         .topbar{height:52px;background:#080f1e;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:200}
         .logo-icon{width:28px;height:28px;background:linear-gradient(135deg,#185FA5,#378ADD);border-radius:7px;display:flex;align-items:center;justify-content:center}
         .logo-icon i{font-size:14px;color:white}
@@ -23,7 +23,7 @@
         .online-dot{width:6px;height:6px;border-radius:50%;background:#97C459;animation:pulse 2s infinite}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         .main{display:grid;grid-template-columns:1fr 280px;flex:1;overflow:hidden}
-        .chat-area{display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.06)}
+        .chat-area{display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.06);overflow:hidden}
         .chat-header{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
         .chat-title{font-size:13px;font-weight:600;color:#E6F1FB;display:flex;align-items:center;gap:8px}
         .beta{font-size:8px;background:rgba(124,58,237,0.2);border:0.5px solid rgba(124,58,237,0.3);color:#a78bfa;padding:1px 6px;border-radius:3px}
@@ -44,7 +44,7 @@
         .sug-btn{font-size:10px;padding:5px 11px;background:rgba(124,58,237,0.1);border:0.5px solid rgba(124,58,237,0.2);color:#a78bfa;border-radius:20px;cursor:pointer;transition:all 0.15s}
         .sug-btn:hover{background:rgba(124,58,237,0.2);color:#c4b5fd}
         .input-area{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;flex-shrink:0}
-        .chat-input{flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;color:white;padding:10px 14px;font-size:12px;outline:none;font-family:'Segoe UI',sans-serif;resize:none}
+        .chat-input{flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;color:white;padding:10px 14px;font-size:12px;outline:none;font-family:'Segoe UI',sans-serif}
         .chat-input:focus{border-color:rgba(124,58,237,0.5)}
         .chat-input::placeholder{color:rgba(255,255,255,0.2)}
         .send-btn{width:38px;height:38px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:9px;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -55,20 +55,16 @@
         .right-col::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1)}
         .rc-section{padding:14px;border-bottom:1px solid rgba(255,255,255,0.05)}
         .rc-title{font-size:9px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:0.08em;margin-bottom:10px}
-        .risk-card{border-radius:8px;padding:12px;margin-bottom:10px;background:rgba({% if latest and latest.risk_level == 'High' %}226,75,74{% elif latest and latest.risk_level == 'Medium' %}239,159,39{% else %}99,153,34{% endif %},0.08);border:0.5px solid rgba({% if latest and latest.risk_level == 'High' %}226,75,74{% elif latest and latest.risk_level == 'Medium' %}239,159,39{% else %}99,153,34{% endif %},0.15)}
-        .risk-score{font-size:32px;font-weight:700;line-height:1;color:{% if latest and latest.risk_level == 'High' %}#F09595{% elif latest and latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}}
-        .risk-lbl{font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px}
         .stat-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:11px;border-bottom:0.5px solid rgba(255,255,255,0.04)}
         .stat-row:last-child{border:none}
         .stat-l{color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:6px}
         .stat-l i{font-size:12px}
         .ok{color:#97C459;font-size:9px;font-weight:600}
         .fail{color:#F09595;font-size:9px;font-weight:600}
-        .warn{color:#EF9F27;font-size:9px;font-weight:600}
         .qa-btn{width:100%;text-align:left;padding:8px 10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:6px;color:rgba(255,255,255,0.45);font-size:10px;cursor:pointer;margin-bottom:4px;display:flex;align-items:center;gap:7px;font-family:'Segoe UI',sans-serif;transition:all 0.15s}
         .qa-btn:hover{background:rgba(124,58,237,0.08);color:#a78bfa;border-color:rgba(124,58,237,0.2)}
         .qa-btn i{font-size:12px;flex-shrink:0;color:#7c3aed}
-        .typing{display:flex;align-items:center;gap:5px;padding:8px 14px}
+        .typing{display:flex;align-items:center;gap:5px;padding:4px 0}
         .typing-dot{width:6px;height:6px;border-radius:50%;background:#7c3aed;animation:typing 1.2s infinite}
         .typing-dot:nth-child(2){animation-delay:0.2s}
         .typing-dot:nth-child(3){animation-delay:0.4s}
@@ -76,6 +72,7 @@
         .financial-box{background:rgba(226,75,74,0.07);border:0.5px solid rgba(226,75,74,0.15);border-radius:8px;padding:10px 12px}
         .fin-amount{font-size:24px;font-weight:700;color:#F09595;line-height:1;margin-bottom:3px}
         .fin-lbl{font-size:10px;color:rgba(255,255,255,0.3)}
+        .risk-card{border-radius:8px;padding:12px;margin-bottom:10px}
     </style>
 </head>
 <body>
@@ -152,9 +149,9 @@
         <div class="rc-section">
             <div class="rc-title">YOUR SECURITY STATUS</div>
             {% if latest %}
-            <div class="risk-card">
-                <div class="risk-score">{{ latest.score }}</div>
-                <div class="risk-lbl">{{ latest.risk_level }} Risk — /100</div>
+            <div class="risk-card" style="background:rgba({% if latest.risk_level == 'High' %}226,75,74{% elif latest.risk_level == 'Medium' %}239,159,39{% else %}99,153,34{% endif %},0.08);border:0.5px solid rgba({% if latest.risk_level == 'High' %}226,75,74{% elif latest.risk_level == 'Medium' %}239,159,39{% else %}99,153,34{% endif %},0.15)">
+                <div style="font-size:32px;font-weight:700;color:{% if latest.risk_level == 'High' %}#F09595{% elif latest.risk_level == 'Medium' %}#EF9F27{% else %}#97C459{% endif %}">{{ latest.score }}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px">{{ latest.risk_level }} Risk — /100</div>
             </div>
             <div class="stat-row"><span class="stat-l"><i class="ti ti-lock"></i> SSL</span><span class="{% if latest.ssl_status == 'valid' %}ok{% else %}fail{% endif %}">{% if latest.ssl_status == 'valid' %}✓ Valid{% else %}✗ Invalid{% endif %}</span></div>
             <div class="stat-row"><span class="stat-l"><i class="ti ti-mail"></i> SPF</span><span class="{% if latest.spf_status == 'found' %}ok{% else %}fail{% endif %}">{% if latest.spf_status == 'found' %}✓ Found{% else %}✗ Missing{% endif %}</span></div>
@@ -208,31 +205,34 @@ function sendMsg() {
     const msgs = document.getElementById('messages');
     const time = new Date().toLocaleTimeString('en-GB');
 
-    msgs.innerHTML += `
-        <div class="msg user">
-            <div class="msg-av av-user">{{ current_user.company_name[0] }}</div>
-            <div>
-                <div class="msg-bubble bubble-user">${q}</div>
-                <div class="msg-time">${time}</div>
-            </div>
+    // User message
+    const userDiv = document.createElement('div');
+    userDiv.className = 'msg user';
+    userDiv.innerHTML = `
+        <div class="msg-av av-user">{{ current_user.company_name[0] }}</div>
+        <div>
+            <div class="msg-bubble bubble-user">${q}</div>
+            <div class="msg-time">${time}</div>
         </div>
     `;
+    msgs.appendChild(userDiv);
     input.value = '';
     msgs.scrollTop = msgs.scrollHeight;
 
-    const typingId = 'typing-' + Date.now();
-    msgs.innerHTML += `
-        <div class="msg" id="${typingId}">
-            <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
-            <div class="msg-bubble bubble-ai">
-                <div class="typing">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
+    // Typing indicator
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'msg';
+    typingDiv.innerHTML = `
+        <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+        <div class="msg-bubble bubble-ai">
+            <div class="typing">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
             </div>
         </div>
     `;
+    msgs.appendChild(typingDiv);
     msgs.scrollTop = msgs.scrollHeight;
 
     fetch('/ai-advisor', {
@@ -242,31 +242,31 @@ function sendMsg() {
     })
     .then(r => r.json())
     .then(data => {
-        const el = document.getElementById(typingId);
-        if(el) el.remove();
+        typingDiv.remove();
         const t2 = new Date().toLocaleTimeString('en-GB');
-        msgs.innerHTML += `
-            <div class="msg">
-                <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
-                <div>
-                    <div class="msg-bubble bubble-ai">${data.answer.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
-                    <div class="msg-time">${t2}</div>
-                </div>
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'msg';
+        aiDiv.innerHTML = `
+            <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+            <div>
+                <div class="msg-bubble bubble-ai">${data.answer.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+                <div class="msg-time">${t2}</div>
             </div>
         `;
+        msgs.appendChild(aiDiv);
         msgs.scrollTop = msgs.scrollHeight;
     })
     .catch(() => {
-        const el = document.getElementById(typingId);
-        if(el) el.remove();
-        msgs.innerHTML += `
-            <div class="msg">
-                <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
-                <div>
-                    <div class="msg-bubble bubble-ai">Connection error — please try again.</div>
-                </div>
+        typingDiv.remove();
+        const errDiv = document.createElement('div');
+        errDiv.className = 'msg';
+        errDiv.innerHTML = `
+            <div class="msg-av av-ai"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+            <div>
+                <div class="msg-bubble bubble-ai">Connection error — please try again.</div>
             </div>
         `;
+        msgs.appendChild(errDiv);
         msgs.scrollTop = msgs.scrollHeight;
     });
 }
