@@ -585,6 +585,21 @@ def vulnerability_scanner():
         latest=latest,
         error=None
     )
+@app.route('/attack-simulation')
+@login_required
+def attack_simulation():
+    assessments = Assessment.query.filter_by(
+        company_id=current_user.id
+    ).order_by(Assessment.created_at.desc()).all()
+    latest = assessments[0] if assessments else None
+    port_result = None
+    if latest and current_user.domain:
+        port_result = check_ports(current_user.domain)
+    return render_template('attack_simulation.html',
+        latest=latest,
+        port_result=port_result,
+        domain=current_user.domain or ''
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
