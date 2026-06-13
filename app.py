@@ -89,9 +89,11 @@ async def capture_pages(domain):
         try:
             start = datetime.datetime.now()
             try:
-                await page.goto(f"https://{domain}", timeout=15000, wait_until='domcontentloaded')
+                await page.goto(f"https://{domain}", timeout=25000, wait_until='domcontentloaded')
+                await page.wait_for_timeout(2000)
             except:
-                await page.goto(f"http://{domain}", timeout=15000, wait_until='domcontentloaded')
+                await page.goto(f"http://{domain}", timeout=25000, wait_until='domcontentloaded')
+                await page.wait_for_timeout(2000)
             load_time = (datetime.datetime.now() - start).total_seconds() * 1000
 
             home_url = page.url
@@ -137,7 +139,8 @@ async def capture_pages(domain):
             for label, url in list(discovered.items())[:4]:
                 try:
                     start = datetime.datetime.now()
-                    await page.goto(url, timeout=15000, wait_until='domcontentloaded')
+                    await page.goto(url, timeout=25000, wait_until='domcontentloaded')
+                    await page.wait_for_timeout(2000)
                     load_time = (datetime.datetime.now() - start).total_seconds() * 1000
 
                     p_html = await page.content()
