@@ -304,6 +304,225 @@ def analyze_page(url, html, load_time_ms=None, alt_data=None, boxes=None):
 
     return findings
 
+def scan_api_endpoint(url):
+    result = {
+        'url': url,
+        'findings': [],
+        'response_fields': None,
+        'requires_auth': None,
+        'grade': 'A'
+    }
+
+    if not url.startswith('http://') and not url.startswith('https://'):
+        url = 'https://' + url
+
+    try:
+        resp = requests.get(url, timeout=15, headers={'User-Agent': 'CyberRiskAI-Scanner'})
+
+        # HTTPS check
+        if url.startswith('https://'):
+            result['findings'].append({
+                'severity': 'good',
+                'name': 'HTTPS enforced',
+                'text': 'Data in transit between client and server is encrypted.',
+                'fix': 'No action needed.',
+                'owasp': None
+            })
+        else:
+            result['findings'].append({
+                'severity': 'high',
+                'name': 'No HTTPS — unencrypted endpoint',
+                'text': 'This API endpoint is served over plain HTTP. Data sent to and from it can be intercepted in transit.',
+                'fix': 'Move this endpoint to HTTPS. Most hosting providers offer free SSL certificates.',
+                'owasp': 'API8:2023 - Security Misconfiguration'
+            })
+
+        # Auth check
+        if resp.status_code == 200:
+            result['requires_auth'] = False
+            result['findings'].append({
+                'severity': 'high',
+                'name': 'No authentication required',
+                'text': 'This endpoint returned a response with no API key, token, or login required. If this returns business or customer data, anyone who finds this URL can access it.',
+                'fix': 'Require an API key, token, or session authentication for any endpoint returning non-public data.',
+                'owasp': 'API1:2023 - Broken Object Level Authorization'
+            })
+
+            # Try to extract field names only (not values) from JSON response
+            try:
+                data = resp.json()
+                fields = extract_field_names(data)
+                result['response_fields'] = fields[:15]
+            except:
+                pass
+
+        elif resp.status_code in [401, 403]:
+            result['requires_auth'] = True
+            result['findings'].append({
+                'severity': 'good',
+                'name': 'Authentication required',
+                'text': f'This endpoint returned a {resp.status_code} response — it requires authentication before returning data.',
+                'fix': 'No action needed.',
+                'owasp': None
+            })
+        else:
+            result['findings'].append({
+                'severity': 'low',
+                'name': f'Endpoint returned status {resp.status_code}',
+                'text': 'This may be expected depending on how the endpoint is designed.',
+                'fix': 'Confirm this status code is expected for this endpoint.',
+                'owasp': None
+            })
+
+        # CORS check
+        cors = resp.headers.get('Access-Control-Allow-Origin')
+        if cors == '*':
+            result['findings'].append({
+                'severity': 'medium',
+                'name': 'CORS allows all origins (*)',
+                'text': 'This API can be called from any website. Combined with weak authentication, this increases the risk of malicious sites making requests on a user\'s behalf.',
+                'fix': 'Restrict Access-Control-Allow-Origin to only the domains that need to call this API.',
+                'owasp': 'API8:2023 - Security Misconfiguration'
+            })
+        elif cors:
+            result['findings'].append({
+                'severity': 'good',
+                'name': 'CORS restricted to specific origins',
+                'text': f'Access-Control-Allow-Origin is set to a specific value, not a wildcard.',
+                'fix': 'No action needed.',
+                'owasp': None
+            })
+
+        # Rate limiting check
+        rate_headers = ['X-RateLimit-Limit', 'RateLimit-Limit', 'X-Rate-Limit-Limit', 'Retry-After']
+        if not any(h in resp.headers for h in rate_headers):
+            result['findings'].append({
+                'severity': 'medium',
+                'name': 'No rate limiting detected',
+                'text': 'No standard rate-limit headers were found in the response. This may mean repeated requests are not throttled, which can lead to abuse or denial-of-service.',
+                'fix': 'Implement rate limiting (e.g. via API gateway) and return standard rate-limit headers.',
+                'owasp': 'API4:2023 - Unrestricted Resource Consumption'
+            })
+        else:
+            result['findings'].append({
+                'severity': 'good',
+                'name': 'Rate limiting headers present',
+                'text': 'This endpoint returns rate-limit information, indicating requests are throttled.',
+                'fix': 'No action needed.',
+                'owasp': None
+            })
+
+        # Server info disclosure
+        server_header = resp.headers.get('Server', '')
+        if server_header and any(v in server_header.lower() for v in ['/', 'apache/', 'nginx/', 'express']):
+            result['findings'].append({
+                'severity': 'low',
+                'name': f'Server software version disclosed ({server_header})',
+                'text': 'The response reveals specific server software and version, which can help an attacker identify known vulnerabilities.',
+                'fix': 'Configure your server to suppress or generalise the Server header.',
+                'owasp': 'API8:2023 - Security Misconfiguration'
+            })
+        else:
+            result['findings'].append({
+                'severity': 'good',
+                'name': 'No detailed server info disclosed',
+                'text': 'The response does not reveal specific server software versions.',
+                'fix': 'No action needed.',
+                'owasp': None
+            })
+            # Sensitive data pattern detection
+        try:
+            body_text = resp.text
+            sensitive_patterns = {
+                'AWS Access Key': r'AKIA[0-9A-Z]{16}',
+                'Stripe Live Key': r'sk_live_[0-9a-zA-Z]{20,}',
+                'Google API Key': r'AIza[0-9A-Za-z\-_]{35}',
+                'Generic API Key pattern': r'["\']?api[_-]?key["\']?\s*[:=]\s*["\'][0-9a-zA-Z]{16,}["\']',
+                'Private Key Header': r'-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----',
+                'Email addresses': r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
+            }
+            found_sensitive = []
+            for label, pattern in sensitive_patterns.items():
+                matches = re.findall(pattern, body_text)
+                if matches:
+                    found_sensitive.append({'label': label, 'count': len(matches)})
+
+            critical_leaks = [f for f in found_sensitive if f['label'] != 'Email addresses']
+            if critical_leaks:
+                leak_names = ', '.join(f["label"] for f in critical_leaks)
+                result['findings'].append({
+                    'severity': 'high',
+                    'name': f'Potential secrets exposed in response',
+                    'text': f'The response body appears to contain patterns matching: {leak_names}. If real, these could allow unauthorised access to other systems.',
+                    'fix': 'Immediately rotate any exposed keys/credentials. Never return secrets, keys, or credentials in API responses.',
+                    'owasp': 'API3:2023 - Broken Object Property Level Authorization'
+                })
+
+            email_matches = [f for f in found_sensitive if f['label'] == 'Email addresses']
+            if email_matches and result.get('requires_auth') == False:
+                result['findings'].append({
+                    'severity': 'medium',
+                    'name': f'{email_matches[0]["count"]} email address(es) found in response',
+                    'text': 'Email addresses were found in a response that requires no authentication. This may be expected for some public data, but worth reviewing for GDPR implications.',
+                    'fix': 'Confirm this data is intended to be public. If it relates to customers or staff, restrict this endpoint.',
+                    'owasp': 'API3:2023 - Broken Object Property Level Authorization'
+                })
+        except:
+            pass
+
+        # OPTIONS / allowed methods check
+        try:
+            opt_resp = requests.options(url, timeout=8, headers={'User-Agent': 'CyberRiskAI-Scanner'})
+            allow_header = opt_resp.headers.get('Allow', '')
+            if allow_header:
+                methods = [m.strip().upper() for m in allow_header.split(',')]
+                risky_methods = [m for m in methods if m in ['PUT', 'DELETE', 'PATCH']]
+                if risky_methods and result.get('requires_auth') == False:
+                    result['findings'].append({
+                        'severity': 'high',
+                        'name': f'Write methods allowed without authentication ({", ".join(risky_methods)})',
+                        'text': f'This endpoint advertises support for {", ".join(risky_methods)} alongside GET, with no authentication required for GET. If these methods are also unauthenticated, data could potentially be modified or deleted.',
+                        'fix': 'Ensure all state-changing methods (PUT, DELETE, PATCH, POST) require authentication, even if GET does not.',
+                        'owasp': 'API1:2023 - Broken Object Level Authorization'
+                    })
+        except:
+            pass
+
+    except requests.exceptions.RequestException as e:
+        result['error'] = f'Could not reach this endpoint: {str(e)}'
+        return result
+
+    # Grade calculation
+    severity_weights = {'high': 25, 'medium': 12, 'low': 5}
+    score = 100
+    for f in result['findings']:
+        score -= severity_weights.get(f['severity'], 0)
+    score = max(0, score)
+
+    if score >= 85: result['grade'] = 'A'
+    elif score >= 70: result['grade'] = 'B'
+    elif score >= 50: result['grade'] = 'C'
+    elif score >= 30: result['grade'] = 'D'
+    else: result['grade'] = 'F'
+
+    result['score'] = score
+    return result
+
+
+def extract_field_names(data, prefix=''):
+    """Extract field NAMES only (not values) from a JSON response, for privacy"""
+    fields = []
+    if isinstance(data, dict):
+        for k, v in data.items():
+            field_path = f"{prefix}.{k}" if prefix else k
+            fields.append(field_path)
+            if isinstance(v, (dict, list)) and len(fields) < 20:
+                fields.extend(extract_field_names(v, field_path))
+    elif isinstance(data, list) and data:
+        if isinstance(data[0], dict):
+            fields.extend(extract_field_names(data[0], prefix + '[]'))
+    return fields
+
 def check_ssl(domain):
     try:
         domain = domain.replace('https://','').replace('http://','').replace('www.','').strip()
@@ -898,6 +1117,22 @@ def web_app_scanner():
     return render_template('web_app_scanner.html',
         domain=domain, result=result, error=error,
         trust_score=trust_score, advice=advice)
+
+@app.route('/api-security', methods=['GET', 'POST'])
+@login_required
+def api_security():
+    result = None
+    api_url = ''
+    error = None
+    if request.method == 'POST':
+        api_url = request.form.get('api_url', '').strip()
+        if api_url:
+            result = scan_api_endpoint(api_url)
+            if result.get('error'):
+                error = result['error']
+                result = None
+    return render_template('api_security.html',
+        api_url=api_url, result=result, error=error)
 
 if __name__ == '__main__':
     app.run(debug=True)

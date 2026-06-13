@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Security — CyberRisk AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#060d1a;color:white;font-family:'Segoe UI',sans-serif}
+        .topbar{position:fixed;top:0;left:0;right:0;height:52px;background:#080f1e;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 16px;gap:12px;z-index:200}
+        .logo-icon{width:28px;height:28px;background:linear-gradient(135deg,#185FA5,#378ADD);border-radius:7px;display:flex;align-items:center;justify-content:center}
+        .logo-icon i{font-size:14px;color:white}
+        .logo-name{font-size:13px;font-weight:700;color:#E6F1FB}
+        .logo-name span{color:#378ADD}
+        .back-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:0.5px solid rgba(55,138,221,0.3);color:#85B7EB;font-size:12px;text-decoration:none;margin-left:auto}
+        .back-btn:hover{background:rgba(55,138,221,0.08);color:#85B7EB}
+        .wrap{margin-top:52px;padding:20px;max-width:1000px;margin-left:auto;margin-right:auto}
+
+        .intro{padding:20px 24px;background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;margin-bottom:20px}
+        .intro-title{font-size:19px;font-weight:700;color:#E6F1FB;margin-bottom:6px}
+        .intro-title span{color:#85B7EB}
+        .intro-sub{font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7}
+        .error-box{background:rgba(226,75,74,0.1);border:0.5px solid rgba(226,75,74,0.2);color:#F09595;padding:10px 14px;border-radius:7px;font-size:12px;margin-top:14px}
+
+        .input-wrap{display:flex;background:#080e1d;border:0.5px solid rgba(55,138,221,0.2);border-radius:9px;overflow:hidden;margin-top:14px}
+        .inp-prefix{padding:13px 14px;font-size:12px;color:rgba(55,138,221,0.5);border-right:0.5px solid rgba(55,138,221,0.1);background:rgba(55,138,221,0.05);white-space:nowrap;display:flex;align-items:center}
+        .inp{flex:1;background:transparent;border:none;color:#E6F1FB;padding:13px 14px;font-size:13px;outline:none;font-family:'Segoe UI'}
+        .inp::placeholder{color:rgba(255,255,255,0.2)}
+        .inp-go{background:#185FA5;color:white;border:none;padding:13px 22px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px}
+        .inp-go:hover{background:#378ADD}
+
+        .result-hero{display:grid;grid-template-columns:160px 1fr;gap:0;background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden;margin-bottom:16px}
+        .grade-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;border-right:0.5px solid rgba(255,255,255,0.06)}
+        .grade-letter{font-size:56px;font-weight:700;line-height:1}
+        .grade-lbl{font-size:9px;color:rgba(255,255,255,0.3);margin-top:6px;letter-spacing:0.06em}
+        .hero-info{padding:18px 22px;display:flex;flex-direction:column;justify-content:center}
+        .hero-title{font-size:13px;font-weight:600;color:#E6F1FB;margin-bottom:6px;font-family:'Courier New',monospace;word-break:break-all}
+        .hero-text{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7}
+
+        .leak-card{background:#0d1627;border:0.5px solid rgba(226,75,74,0.2);border-radius:12px;padding:0;margin-bottom:16px;overflow:hidden}
+        .leak-header{background:rgba(226,75,74,0.08);padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid rgba(226,75,74,0.15)}
+        .leak-header-icon{width:32px;height:32px;border-radius:8px;background:rgba(226,75,74,0.15);display:flex;align-items:center;justify-content:center;font-size:16px}
+        .leak-header-title{font-size:13px;font-weight:600;color:#F09595}
+        .leak-header-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px}
+
+        .leak-body{position:relative;padding:18px}
+        .leak-json{font-family:'Courier New',monospace;font-size:12px;line-height:1.8;color:rgba(255,255,255,0.7);background:#080308;border-radius:8px;padding:16px;filter:blur(5px);user-select:none;transition:filter 0.4s}
+        .leak-json.revealed{filter:blur(0)}
+        .leak-key{color:#85B7EB}
+
+        .leak-overlay{position:absolute;inset:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,3,8,0.55);border-radius:8px;transition:opacity 0.4s}
+        .leak-overlay.hidden{opacity:0;pointer-events:none}
+        .leak-stamp{border:3px solid #E24B4A;color:#F09595;font-size:18px;font-weight:800;letter-spacing:0.15em;padding:8px 24px;border-radius:6px;transform:rotate(-8deg);margin-bottom:10px;font-family:'Courier New',monospace}
+        .leak-overlay-text{font-size:12px;color:rgba(255,255,255,0.6);text-align:center;max-width:380px;line-height:1.7}
+        .reveal-btn{margin-top:12px;background:#E24B4A;color:white;border:none;padding:9px 20px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer}
+
+        .leak-footer{padding:14px 18px;background:#080e1d;border-top:0.5px solid rgba(255,255,255,0.05)}
+        .leak-footer-title{font-size:11px;font-weight:600;color:#85B7EB;margin-bottom:6px}
+        .leak-footer-text{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.7}
+
+        .auth-ok-card{background:rgba(99,153,34,0.05);border:0.5px solid rgba(99,153,34,0.15);border-radius:12px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+        .auth-ok-icon{width:42px;height:42px;border-radius:10px;background:rgba(99,153,34,0.12);display:flex;align-items:center;justify-content:center;font-size:20px;color:#97C459;flex-shrink:0}
+        .auth-ok-title{font-size:13px;font-weight:600;color:#E6F1FB;margin-bottom:4px}
+        .auth-ok-text{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6}
+
+        .section-title{font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:0.08em;margin-bottom:10px;margin-top:18px}
+        .findings-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+        .finding-card{background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:9px;padding:14px;display:flex;align-items:flex-start;gap:10px}
+        .finding-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .finding-icon.ok{background:rgba(99,153,34,0.12);color:#97C459}
+        .finding-icon.fail{background:rgba(226,75,74,0.12);color:#F09595}
+        .finding-icon.warn{background:rgba(239,159,39,0.12);color:#EF9F27}
+        .finding-name{font-size:12px;font-weight:600;color:#E6F1FB;margin-bottom:3px}
+        .finding-desc{font-size:11px;color:rgba(255,255,255,0.35);line-height:1.6;margin-bottom:6px}
+        .owasp-tag{font-size:9px;background:rgba(55,138,221,0.08);border:0.5px solid rgba(55,138,221,0.15);color:#85B7EB;padding:2px 8px;border-radius:8px;display:inline-block}
+
+        .vendor-card{background:rgba(55,138,221,0.05);border:0.5px solid rgba(55,138,221,0.12);border-radius:10px;padding:16px;margin-top:18px}
+        .vendor-title{font-size:11px;font-weight:600;color:#85B7EB;letter-spacing:0.05em;margin-bottom:10px}
+        .vendor-item{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:rgba(255,255,255,0.5);padding:5px 0;line-height:1.6}
+        .vendor-item b{color:#E6F1FB}
+
+        .empty-state{background:#0d1627;border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:40px 20px;text-align:center}
+        .empty-state i{font-size:48px;color:rgba(55,138,221,0.3);display:block;margin-bottom:16px}
+
+        @media (max-width:900px){
+            .result-hero{grid-template-columns:1fr}
+            .findings-grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="logo-icon"><i class="ti ti-shield-bolt"></i></div>
+    <div style="margin-left:8px">
+        <div style="display:flex;align-items:center;gap:4px">
+            <span class="logo-name">Cyber<span>Risk AI</span></span>
+            <span style="font-size:9px;background:rgba(55,138,221,0.2);border:0.5px solid rgba(55,138,221,0.3);color:#85B7EB;padding:1px 5px;border-radius:4px">9D</span>
+        </div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.25)">AI-Powered Threat Intelligence</div>
+    </div>
+    <a href="/dashboard" class="back-btn"><i class="ti ti-arrow-left"></i> Back to dashboard</a>
+</div>
+
+<div class="wrap">
+    <div class="intro">
+        <div class="intro-title">API <span>Security</span></div>
+        <div class="intro-sub">Enter any API endpoint your business uses or exposes — we'll show you exactly what an outsider would see, not just a checklist.</div>
+
+        {% if error %}
+        <div class="error-box"><i class="ti ti-alert-circle"></i> {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="input-wrap">
+                <span class="inp-prefix">API URL://</span>
+                <input class="inp" name="api_url" value="{{ api_url }}" placeholder="https://api.example.com/endpoint" required>
+                <button type="submit" class="inp-go"><i class="ti ti-plug-connected" style="font-size:14px"></i> SCAN ENDPOINT</button>
+            </div>
+        </form>
+    </div>
+
+    {% if result %}
+    <div class="result-hero">
+        <div class="grade-box" style="background:{% if result.grade in ['A','B'] %}rgba(99,153,34,0.05){% elif result.grade == 'C' %}rgba(239,159,39,0.05){% else %}rgba(226,75,74,0.05){% endif %}">
+            <div class="grade-letter" style="color:{% if result.grade in ['A','B'] %}#97C459{% elif result.grade == 'C' %}#EF9F27{% else %}#E24B4A{% endif %}">{{ result.grade }}</div>
+            <div class="grade-lbl">API SECURITY GRADE</div>
+        </div>
+        <div class="hero-info">
+            <div class="hero-title">{{ result.url }}</div>
+            <div class="hero-text">
+                {% if result.requires_auth == False %}
+                This endpoint responded with data and did not require any authentication. Below is what the response structure looks like to anyone who requests this URL.
+                {% elif result.requires_auth == True %}
+                This endpoint correctly requires authentication before returning data — a good security practice.
+                {% else %}
+                Scan completed — see findings below.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if result.requires_auth == False and result.response_fields %}
+    <div class="leak-card">
+        <div class="leak-header">
+            <div class="leak-header-icon"><i class="ti ti-lock-open"></i></div>
+            <div>
+                <div class="leak-header-title">What this API returns to anyone who asks</div>
+                <div class="leak-header-sub">Field names from the real response — values are hidden for privacy</div>
+            </div>
+        </div>
+        <div class="leak-body">
+            <div class="leak-json" id="leakJson">
+{<br>
+{% for field in result.response_fields %}&nbsp;&nbsp;<span class="leak-key">"{{ field }}"</span>: ...{% if not loop.last %},{% endif %}<br>
+{% endfor %}}
+            </div>
+            <div class="leak-overlay" id="leakOverlay">
+                <div class="leak-stamp">NO AUTH REQUIRED</div>
+                <div class="leak-overlay-text">This is the real field structure returned by your API with no login, key, or token required. If any of these fields contain personal or business data, anyone who finds this URL can access it.</div>
+                <button class="reveal-btn" onclick="revealLeak()">Show me the response structure</button>
+            </div>
+        </div>
+        <div class="leak-footer">
+            <div class="leak-footer-title">HOW TO FIX THIS</div>
+            <div class="leak-footer-text">Require an API key or login token for any endpoint that returns personal or business data. If this is a third-party tool, contact your vendor and ask them to confirm this endpoint is protected — this may also be a GDPR concern if personal data is involved.</div>
+        </div>
+    </div>
+    {% elif result.requires_auth == True %}
+    <div class="auth-ok-card">
+        <div class="auth-ok-icon"><i class="ti ti-lock"></i></div>
+        <div>
+            <div class="auth-ok-title">This endpoint is protected</div>
+            <div class="auth-ok-text">It correctly rejected the request without valid authentication — this is exactly what should happen for an endpoint handling business or customer data.</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section-title">ALL CHECKS ON THIS ENDPOINT</div>
+    <div class="findings-grid">
+        {% for f in result.findings %}
+        <div class="finding-card">
+            <div class="finding-icon {% if f.severity == 'good' %}ok{% elif f.severity == 'high' %}fail{% else %}warn{% endif %}">
+                <i class="ti {% if f.severity == 'good' %}ti-check{% elif f.severity == 'high' %}ti-alert-triangle{% else %}ti-info-circle{% endif %}"></i>
+            </div>
+            <div>
+                <div class="finding-name">{{ f.name }}</div>
+                <div class="finding-desc">{{ f.text }} <strong style="color:rgba(255,255,255,0.5))">Fix:</strong> {{ f.fix }}</div>
+                {% if f.owasp %}
+                <span class="owasp-tag">Maps to: {{ f.owasp }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="vendor-card">
+        <div class="vendor-title">WHAT TO ASK YOUR SOFTWARE VENDORS</div>
+        <div class="vendor-item"><b>1.</b>&nbsp; "Does this integration require an API key or token for every request?"</div>
+        <div class="vendor-item"><b>2.</b>&nbsp; "Can I see a list of every API key issued for our account, and revoke ones we don't recognise?"</div>
+        <div class="vendor-item"><b>3.</b>&nbsp; "Are API keys rotated periodically, or do they stay valid forever?"</div>
+        <div class="vendor-item"><b>4.</b>&nbsp; "If this endpoint is compromised, what customer data could be exposed?"</div>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <i class="ti ti-api"></i>
+        <div style="font-size:16px;font-weight:600;color:#E6F1FB;margin-bottom:8px">Enter an API endpoint above to scan</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.3)">Most small businesses don't manage their own APIs directly — if you use third-party tools, this also helps you know what to ask your vendors</div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function revealLeak() {
+    document.getElementById('leakJson').classList.add('revealed');
+    document.getElementById('leakOverlay').classList.add('hidden');
+}
+</script>
+</body>
+</html>
