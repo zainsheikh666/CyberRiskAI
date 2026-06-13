@@ -10,6 +10,10 @@ import socket
 import ssl
 import datetime
 import os
+import asyncio
+from playwright.async_api import async_playwright
+import re
+import base64
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'cyberrisk-secret-key-2024'
@@ -73,6 +77,229 @@ def check_ports(domain):
         except:
             pass
     return {'found': True, 'ports': open_ports, 'closed': closed_ports, 'ip': ip, 'total': len(open_ports)}
+
+
+async def capture_pages(domain):
+    results = []
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page(viewport={'width': 1280, 'height': 800})
+
+        try:
+            start = datetime.datetime.now()
+            try:
+                await page.goto(f"https://{domain}", timeout=15000, wait_until='domcontentloaded')
+            except:
+                await page.goto(f"http://{domain}", timeout=15000, wait_until='domcontentloaded')
+            load_time = (datetime.datetime.now() - start).total_seconds() * 1000
+
+            home_url = page.url
+            home_html = await page.content()
+            home_screenshot = await page.screenshot(full_page=False)
+            home_boxes = await get_element_boxes(page)
+
+            alt_data = await page.evaluate('''() => {
+                const imgs = Array.from(document.querySelectorAll('img'));
+                return {
+                    total: imgs.length,
+                    missing: imgs.filter(i => !i.alt || i.alt.trim() === '').length
+                };
+            }''')
+
+            results.append({
+                'label': 'Homepage',
+                'url': home_url,
+                'screenshot': home_screenshot,
+                'load_time': round(load_time),
+                'findings': analyze_page(home_url, home_html, load_time, alt_data, home_boxes)
+            })
+
+            links = await page.eval_on_selector_all(
+                'a', 'els => els.map(e => ({href: e.href, text: e.innerText}))'
+            )
+
+            discovered = {}
+            label_keywords = {
+                'Shop': ['shop', 'store', 'products', 'shop now', 'collection'],
+                'About': ['about', 'about us', 'our story', 'who we are'],
+                'Contact': ['contact', 'get in touch', 'contact us', 'reach us'],
+                'Blog': ['blog', 'news', 'articles', 'insights'],
+            }
+            for link in links:
+                text = (link.get('text') or '').lower().strip()
+                href = link.get('href') or ''
+                if domain in href:
+                    for label, keywords in label_keywords.items():
+                        if label not in discovered and any(k in text for k in keywords):
+                            discovered[label] = href
+
+            for label, url in list(discovered.items())[:4]:
+                try:
+                    start = datetime.datetime.now()
+                    await page.goto(url, timeout=15000, wait_until='domcontentloaded')
+                    load_time = (datetime.datetime.now() - start).total_seconds() * 1000
+
+                    p_html = await page.content()
+                    p_screenshot = await page.screenshot(full_page=False)
+                    p_boxes = await get_element_boxes(page)
+
+                    p_alt_data = await page.evaluate('''() => {
+                        const imgs = Array.from(document.querySelectorAll('img'));
+                        return {
+                            total: imgs.length,
+                            missing: imgs.filter(i => !i.alt || i.alt.trim() === '').length
+                        };
+                    }''')
+
+                    results.append({
+                        'label': label,
+                        'url': page.url,
+                        'screenshot': p_screenshot,
+                        'load_time': round(load_time),
+                        'findings': analyze_page(page.url, p_html, load_time, p_alt_data, p_boxes)
+                    })
+                except:
+                    continue
+
+        finally:
+            await browser.close()
+
+    return results
+
+
+async def get_element_boxes(page):
+    """Get real bounding boxes of key elements for annotation positioning"""
+    boxes = {}
+
+    # Password field
+    try:
+        pw_field = await page.query_selector('input[type="password"]')
+        if pw_field:
+            box = await pw_field.bounding_box()
+            if box:
+                boxes['password_field'] = box
+    except:
+        pass
+
+    # Footer
+    try:
+        footer = await page.query_selector('footer')
+        if footer:
+            box = await footer.bounding_box()
+            if box:
+                boxes['footer'] = box
+    except:
+        pass
+
+    # Nav
+    try:
+        nav = await page.query_selector('nav')
+        if nav:
+            box = await nav.bounding_box()
+            if box:
+                boxes['nav'] = box
+    except:
+        pass
+
+    return boxes
+
+
+def analyze_page(url, html, load_time_ms=None, alt_data=None, boxes=None):
+    findings = []
+    boxes = boxes or {}
+    viewport_w, viewport_h = 1280, 800
+
+    if url.startswith('http://'):
+        findings.append({
+            'severity': 'high',
+            'name': 'Page loads without HTTPS',
+            'text': 'Your browser shows "Not Secure" for this page. This is the first thing customers and search engines see, and it directly affects trust and SEO rankings.',
+            'fix': "Enable HTTPS redirect at your hosting provider — most hosts and Let's Encrypt offer this for free in under 30 minutes.",
+            'box': None
+        })
+
+    has_password_field = 'type="password"' in html or "type='password'" in html
+    if has_password_field and url.startswith('http://'):
+        findings.append({
+            'severity': 'high',
+            'name': 'Login or password form on an unencrypted page',
+            'text': 'A form requesting a password is present on a page served over HTTP. Data submitted here could be intercepted in transit.',
+            'fix': 'Enabling HTTPS site-wide resolves this automatically — no code changes needed.',
+            'box': boxes.get('password_field')
+        })
+
+    current_year = 2026
+    copyright_match = re.search(r'©\s*(\d{4})', html)
+    if copyright_match:
+        year = int(copyright_match.group(1))
+        if year < current_year - 1:
+            findings.append({
+                'severity': 'low',
+                'name': f'Footer shows an outdated copyright year ({year})',
+                'text': 'A copyright year that is several years old can signal to visitors and search engines that the site may not be actively maintained.',
+                'fix': 'Update your footer template to show the current year, ideally generated dynamically.',
+                'box': boxes.get('footer')
+            })
+
+    cookie_keywords = ['cookie consent', 'accept cookies', 'we use cookies', 'cookie policy', 'manage cookies']
+    if not any(k in html.lower() for k in cookie_keywords):
+        findings.append({
+            'severity': 'medium',
+            'name': 'No cookie consent banner detected',
+            'text': 'UK GDPR and PECR generally require consent before setting non-essential cookies. We did not detect a cookie consent banner on this page.',
+            'fix': 'Add a cookie consent banner — free tools like Osano or CookieYes can be added with a single script tag.',
+            'box': None
+        })
+
+    if load_time_ms is not None and load_time_ms > 3000:
+        findings.append({
+            'severity': 'medium',
+            'name': f'Slow page load — {load_time_ms/1000:.1f} seconds',
+            'text': 'Pages that take over 3 seconds to load often see higher visitor drop-off rates.',
+            'fix': 'Compress images, enable browser caching, and consider a CDN.',
+            'box': None
+        })
+
+    if alt_data and alt_data['total'] > 0 and alt_data['missing'] > 0:
+        findings.append({
+            'severity': 'low',
+            'name': f"{alt_data['missing']} of {alt_data['total']} images missing alt text",
+            'text': 'Alt text helps screen readers describe images to visually impaired visitors and helps search engines understand your content.',
+            'fix': 'Add descriptive alt attributes to all <img> tags.',
+            'box': None
+        })
+
+    if not findings:
+        findings.append({
+            'severity': 'good',
+            'name': 'No major visual issues found on this page',
+            'text': 'This page appears to be well configured based on the checks performed.',
+            'fix': 'No action needed — continue monitoring periodically.',
+            'box': None
+        })
+
+    if boxes.get('nav') and any(f['severity'] != 'good' for f in findings):
+        findings.append({
+            'severity': 'good',
+            'name': 'Navigation and branding look professional',
+            'text': 'Clear navigation structure detected — a layout customers recognise and trust.',
+            'fix': 'No action needed — this is a strength to maintain.',
+            'box': boxes.get('nav')
+        })
+
+    # Convert pixel boxes to percentage positions for responsive display
+    for f in findings:
+        if f.get('box'):
+            b = f['box']
+            f['pos'] = {
+                'left_pct': round((b['x'] + b['width']/2) / viewport_w * 100, 1),
+                'top_pct': round((b['y']) / viewport_h * 100, 1)
+            }
+        else:
+            f['pos'] = None
+
+    return findings
 
 def check_ssl(domain):
     try:
@@ -347,7 +574,7 @@ def results():
     breach_result = check_breach(email) if email else {'breached': False, 'count': 0, 'breaches': []}
     score, risk_level, risk_message, breakdown = calculate_risk(answers, ssl_result, dns_result, breach_result)
     recommendations = generate_recommendations(answers, ssl_result, dns_result, breach_result)
-    attack_simulation = generate_attack_simulation(
+    attack_simulation_result = generate_attack_simulation(
         current_user.company_name, domain, answers, ssl_result, dns_result)
     new_assessment = Assessment(
         company_id=current_user.id,
@@ -376,7 +603,7 @@ def results():
         risk_message=risk_message,
         breakdown=breakdown,
         recommendations=recommendations,
-        attack_simulation=attack_simulation,
+        attack_simulation=attack_simulation_result,
         answers=answers,
         ssl_result=ssl_result,
         dns_result=dns_result,
@@ -479,7 +706,7 @@ def download_pdf(assessment_id):
     ssl_result = {'status': assessment.ssl_status, 'expires': 'N/A', 'days_left': 0}
     dns_result = {'spf': assessment.spf_status, 'dmarc': assessment.dmarc_status}
     breach_result = {'breached': assessment.breach_found, 'count': 0, 'breaches': []}
-    attack_simulation = generate_attack_simulation(
+    attack_simulation_result = generate_attack_simulation(
         current_user.company_name, current_user.domain or '',
         answers, ssl_result, dns_result)
     recommendations = generate_recommendations(answers, ssl_result, dns_result, breach_result)
@@ -498,7 +725,7 @@ def download_pdf(assessment_id):
         ssl_result=ssl_result,
         dns_result=dns_result,
         breach_result=breach_result,
-        attack_simulation=attack_simulation
+        attack_simulation=attack_simulation_result
     )
     return send_file(
         pdf_buffer,
@@ -510,6 +737,7 @@ def download_pdf(assessment_id):
 @app.route('/waitlist', methods=['POST'])
 def waitlist():
     return redirect(url_for('register'))
+
 @app.route('/attack-surface', methods=['GET', 'POST'])
 @login_required
 def attack_surface():
@@ -532,6 +760,7 @@ def attack_surface():
         dns_result=dns_result,
         domain=domain
     )
+
 @app.route('/threat-map')
 @login_required
 def threat_map():
@@ -543,6 +772,7 @@ def threat_map():
         latest=latest,
         domain=current_user.domain or ''
     )
+
 @app.route('/ai-advisor-page')
 @login_required
 def ai_advisor_page():
@@ -554,6 +784,7 @@ def ai_advisor_page():
         latest=latest,
         domain=current_user.domain or ''
     )
+
 @app.route('/vulnerability-scanner', methods=['GET', 'POST'])
 @login_required
 def vulnerability_scanner():
@@ -585,6 +816,7 @@ def vulnerability_scanner():
         latest=latest,
         error=None
     )
+
 @app.route('/attack-simulation')
 @login_required
 def attack_simulation():
@@ -600,6 +832,69 @@ def attack_simulation():
         port_result=port_result,
         domain=current_user.domain or ''
     )
+
+def calculate_trust_score(pages):
+    total_score = 100
+    severity_weights = {'high': 12, 'medium': 6, 'low': 3}
+    for pg in pages:
+        for f in pg['findings']:
+            total_score -= severity_weights.get(f['severity'], 0)
+    return max(0, min(100, total_score))
+
+def generate_web_advice(domain, pages):
+    try:
+        from groq import Groq
+        client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
+
+        summary_lines = []
+        for pg in pages:
+            issues = [f['name'] for f in pg['findings'] if f['severity'] != 'good']
+            summary_lines.append(f"{pg['label']} ({pg['url']}) — load time {pg.get('load_time','?')}ms — issues: {', '.join(issues) if issues else 'none'}")
+
+        prompt = f"""You are a web consultant advising a UK small business about their website at {domain}.
+Here is what was found across {len(pages)} pages:
+{chr(10).join(summary_lines)}
+
+Write a short paragraph (4-6 sentences) of plain-English advice. Identify the root cause if multiple issues share one (e.g. HTTPS). Mention which pages are clean. End with a realistic estimate of impact if fixed. No headers, no bullet points, just one paragraph."""
+
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=250,
+            temperature=0.6
+        )
+        return response.choices[0].message.content
+    except:
+        total_issues = sum(len([f for f in pg['findings'] if f['severity'] != 'good']) for pg in pages)
+        return f"We found {total_issues} issue(s) across {len(pages)} pages on {domain}. Review the findings for each page above and prioritise high-severity issues first — these typically have the biggest impact on visitor trust and security."
+
+
+@app.route('/web-app-scanner', methods=['GET', 'POST'])
+@login_required
+def web_app_scanner():
+    result = None
+    domain = ''
+    error = None
+    trust_score = None
+    advice = None
+    if request.method == 'POST':
+        domain = request.form.get('domain', '').strip()
+        if domain:
+            if not validate_domain(domain):
+                error = 'Domain does not exist.'
+            else:
+                try:
+                    pages = asyncio.run(capture_pages(domain))
+                    for pg in pages:
+                        pg['screenshot_b64'] = base64.b64encode(pg['screenshot']).decode('utf-8')
+                    result = pages
+                    trust_score = calculate_trust_score(pages)
+                    advice = generate_web_advice(domain, pages)
+                except Exception as e:
+                    error = f'Scan failed: {str(e)}'
+    return render_template('web_app_scanner.html',
+        domain=domain, result=result, error=error,
+        trust_score=trust_score, advice=advice)
 
 if __name__ == '__main__':
     app.run(debug=True)
